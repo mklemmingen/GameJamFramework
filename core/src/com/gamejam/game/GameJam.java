@@ -95,11 +95,6 @@ public class GameJam extends ApplicationAdapter {
 		// skin (look) of the buttons via the prearranged json file
 		skin = new Skin(Gdx.files.internal("menu.commodore64/uiskin.json"));
 
-		// creating empty stages to be filled later -----------------------------------------
-
-		backgroundStage = new Stage(viewport);
-		songNameStage = new Stage(viewport);
-
 		// resize all stages for the beginning ----------------------------------------------
 		resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 
@@ -121,7 +116,8 @@ public class GameJam extends ApplicationAdapter {
 		 */
 		// clear the screen at each frame  ---------------------------
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-		Gdx.gl.glClearColor(1, 1, 1, 1);
+		// set the color of the screen to black
+		Gdx.gl.glClearColor(0, 0, 0, 0);
 
 		// interaction stage ------------------------------------------
 		// for the stages, see method switchToStage
@@ -141,7 +137,6 @@ public class GameJam extends ApplicationAdapter {
 		musicLabel.setColor(Color.BLUE);
 		// scale down by 0.75 to 0.25 of current size
 		musicLabel.setFontScale(musicLabelScale);
-		songNameStage.addActor(musicLabel);
 
 		// load the sound for the game
 
@@ -167,9 +162,7 @@ public class GameJam extends ApplicationAdapter {
 		/*
 		 * fits the needed values when a resize has happened, when a resize has happened
 		 */
-		backgroundStage.getViewport().update(width, height, true);
 		currentStage.getViewport().update(width, height, true);
-		songNameStage.getViewport().update(width, height, true);
 	}
 
 	@Override
@@ -181,8 +174,6 @@ public class GameJam extends ApplicationAdapter {
 		skin.dispose();
 
 		currentStage.dispose();
-		backgroundStage.dispose();
-		songNameStage.dispose();
 
 		 // dispose of all music
 		 background_music.dispose();
