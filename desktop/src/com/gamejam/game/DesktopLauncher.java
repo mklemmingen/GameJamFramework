@@ -12,6 +12,7 @@ public class DesktopLauncher {
 		config.setForegroundFPS(60);
 		config.useVsync(true);
 		config.setResizable(false);
+		config.setWindowIcon("gamejamlogo.png");
 		new Lwjgl3Application(new GameJam(), config);
 	}
 }

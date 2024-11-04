@@ -4,11 +4,13 @@ import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
+import com.badlogic.gdx.utils.viewport.Viewport;
 import com.gamejam.game.backend.BackMan;
 import com.gamejam.game.frontend.sound.MusicPlaylist;
 import com.gamejam.game.frontend.stage.LoadingScreenStage;
@@ -21,6 +23,7 @@ public class GameJam extends ApplicationAdapter {
 
 	// used for essential resolution and drawing matters ---------------------------------------------------------------
 	private static SpriteBatch batch;
+	private static Viewport viewport;
 
 	// size of tiles on the board --------------------------------------------------------------------------------------
 	private static float tileSize = 64;
@@ -55,8 +58,6 @@ public class GameJam extends ApplicationAdapter {
 	private static float buttonWidth;
 	private static float buttonHeight;
 
-
-
 	// -------------------------------------------- --------------------------------------------------------------------
 
 	private static Sound gameJam;
@@ -66,12 +67,6 @@ public class GameJam extends ApplicationAdapter {
 	private static Stage songNameStage;
 	private static Label musicLabel;
 	private static float musicLabelScale;
-
-	// FPS counter and management ----------------- for optimization, we allow a fixed number of frames per second -----
-
-	private static float frameTimer = 0;
-	private static final int framesPerSecond = 60; // change if you want a higher fps (physics will be faster if impl.)
-	private static float timePerFrame;
 
 	// -------------------------------------------- Number of Columns and Rows -----------------------------------------
 
@@ -91,19 +86,19 @@ public class GameJam extends ApplicationAdapter {
 
 		// creation of the batch for drawing the images -------------------------------------
 		batch = new SpriteBatch();
+		viewport = new ScreenViewport();
+
+		// loading Screen is going for a fixed amount of time + till loadingStage method end() called
+		switchToStage(new LoadingScreenStage(viewport, batch)); // start the loading screen
 
 		// skin of the UI -------------------------------------------------------------------
 		// skin (look) of the buttons via the prearranged json file
 		skin = new Skin(Gdx.files.internal("menu.commodore64/uiskin.json"));
 
-		// loading Screen is going for a fixed amount of time + till loadingStage method end() called
-		switchToStage(new LoadingScreenStage()); // start the loading screen
-
 		// creating empty stages to be filled later -----------------------------------------
 
-		currentStage = new Stage(new ScreenViewport());
-		backgroundStage = new Stage(new ScreenViewport());
-		songNameStage = new Stage(new ScreenViewport());
+		backgroundStage = new Stage(viewport);
+		songNameStage = new Stage(viewport);
 
 		// resize all stages for the beginning ----------------------------------------------
 		resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
@@ -113,8 +108,6 @@ public class GameJam extends ApplicationAdapter {
 
 		buttonWidth = tileSize * 2;
 		buttonHeight = tileSize / 2;
-
-		timePerFrame = 1f / framesPerSecond;
 
 		Gdx.app.log("GameJam", "GameJam started, create finished succesfully");
 
@@ -126,20 +119,12 @@ public class GameJam extends ApplicationAdapter {
 		/*
 		* render is called every frame, main-game loop of the game, holds all stages in nested ifs and the processTurn
 		 */
-
-		// limit to maxfps -------------------------------------------
-		frameTimer += Gdx.graphics.getDeltaTime();
-		if (frameTimer >= timePerFrame) {
-			frameTimer = 0;
-		} else {
-			return;
-		}
-
 		// clear the screen at each frame  ---------------------------
+		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 		Gdx.gl.glClearColor(1, 1, 1, 1);
 
 		// interaction stage ------------------------------------------
-		// for the stages, displays only stage assigned as currentStage, see method switchToStage
+		// for the stages, see method switchToStage
 		currentStage.act(Gdx.graphics.getDeltaTime());
 		currentStage.draw();
 	}
@@ -174,7 +159,6 @@ public class GameJam extends ApplicationAdapter {
 		Gdx.input.setInputProcessor(currentStage);
 
 		Gdx.app.log("BoomChess", "Loading Assets: Finished");
-		// leaves the loading screen
 	}
 
 
@@ -212,8 +196,11 @@ public class GameJam extends ApplicationAdapter {
 		* or combined with a return Stage createStage method
 		 */
 
+		Gdx.app.log("GameJam", "switchToStage called. StageName: " + newStage.getClass().getSimpleName());
+
 		if (currentStage != null){
 			currentStage.clear();}
+		newStage.setViewport(viewport);
 		currentStage = newStage;
 		Gdx.input.setInputProcessor(currentStage);
 	}

@@ -3,82 +3,74 @@ package com.gamejam.game.frontend.stage;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
-import com.badlogic.gdx.scenes.scene2d.ui.Stack;
-import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.utils.viewport.Viewport;
 import com.gamejam.game.GameJam;
 
-public class LoadingScreenStage extends Stage{
+public class LoadingScreenStage extends Stage {
 
     private float loadingElapsed = 0;
     private boolean endLoadingScreen = false;
-    private Sound loadingSound = Gdx.audio.newSound(Gdx.files.internal("loadingScreenJingle.mp3"));
-    private Stack root;
+    private Sound loadingSound;
+    private Image loadingLogo;
+    private SpriteBatch batch;
 
-    public LoadingScreenStage() {
+    public LoadingScreenStage(Viewport viewport, SpriteBatch batch) {
+        super(viewport);
+        this.batch = batch;
 
         Gdx.app.log("LoadingScreen", "LoadingScreen initializing");
-
-        root = new Stack();
-        root.setFillParent(true);
 
         float tileSize = GameJam.getTileSize();
 
         Gdx.app.log("LoadingScreen", "Loading gamejamlogo");
-        Image gameJamLogo = new Image(new Texture(Gdx.files.internal("gamejamlogo.png")));
-        gameJamLogo.setSize(tileSize*4, tileSize*4);
-        root.add(gameJamLogo);
+        loadingLogo = new Image(new Texture(Gdx.files.internal("gamejamlogo.png")));
+        loadingLogo.setSize(tileSize * 4, tileSize * 4);
+        loadingLogo.setPosition((float) Gdx.graphics.getWidth() / 2 - loadingLogo.getWidth()/2,
+                (float) Gdx.graphics.getHeight() / 2 - loadingLogo.getHeight()/2);
 
-        root.setSize(tileSize*6, tileSize*6);
-        root.setFillParent(false);
-        root.setPosition((float) Gdx.graphics.getWidth() /2 - tileSize*3, (float) Gdx.graphics.getHeight() /2 - tileSize*3);
-
-        addActor(root);
-
+        // add the loadingLogo to the stage
+        addActor(loadingLogo);
         // play the loading screen jingle
         playLoadingScreenJingle();
 
         Gdx.app.log("LoadingScreen", "LoadingScreen initialized");
     }
 
-    public void endLoadingScreen(){
+    public void endLoadingScreen() {
         endLoadingScreen = true;
     }
 
-    // draw the stage
     @Override
     public void draw() {
+        batch.begin();
         super.draw();
-        root.draw(getBatch(), 1);
+        batch.end();
     }
 
-    // act the stage
     @Override
-    public void act() {
-        super.act();
-        root.act(Gdx.graphics.getDeltaTime());
-        loadingElapsed += Gdx.graphics.getDeltaTime();
-        // run loading screen for 4 seconds atleast
-        if(loadingElapsed >= 4 & endLoadingScreen){
-            // ensures game starts in menu
-            GameJam.createMainMenuStage();
-            Gdx.app.log("LoadingScreen", "LoadingScreen finished");
-            clear();
-            dispose();
+    public void act(float delta) {
+        super.act(delta);
+        loadingElapsed += delta;
+        // run loading screen for 4 seconds at least
+        if (loadingElapsed > 4) {
+            startMenu();
         }
-        loadingElapsed += Gdx.graphics.getDeltaTime();
+    }
+
+    private void startMenu() {
+        GameJam.createMainMenuStage();
+        Gdx.app.log("LoadingScreen", "LoadingScreen finished");
+        loadingLogo.clear();
+        clear();
+        dispose();
     }
 
     public void playLoadingScreenJingle() {
-        /*
-         * method for playing the loading screen jingle
-         */
-        // check to see if loadingSound is not null
-        if (loadingSound == null) {
-            Gdx.app.log("LoadingStage", "Loading Screen Jingle not played, loadingSound is null");
-            return;
-        }
+
+        loadingSound = Gdx.audio.newSound(Gdx.files.internal("sounds/gamejamjingle.mp3"));
         Gdx.app.log("GameJam", "Loading Screen Jingle played");
         loadingSound.play(GameJam.getVolume());
     }
