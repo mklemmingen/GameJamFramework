@@ -33,25 +33,12 @@ public class GameJam extends ApplicationAdapter {
 
 	// music -------------------------------------------- music and sound ----------------------------------------------
 	private static MusicPlaylist background_music;
-	private static MusicPlaylist menu_music;
 
 	// volume of Sounds
 
 	private static float volume = 0.2f;  // variable to store the current MUSIC volume level
 
 	private static float soundVolume = 0.20f;  // variable to store the current SOUND volume level
-
-	private static Sound loadingSound;
-
-	// stage for gameEnd -----------------------------------------------------------------------------------------------
-	private static Stage gameEndStage;
-
-	// for the textures of the loadingScreen ---------------------------------------------------------------------------
-
-	private static Stage loadingStage;
-	private static boolean loadingScreenIsRunning = true;
-	private static float loadingElapsed = 0;
-	private static boolean assetsLoaded = false;
 
 	// for the return to menu button, we have to have a boolean keeping processTurn from running if not true -----------
 	private static boolean inGame = false;
@@ -109,13 +96,11 @@ public class GameJam extends ApplicationAdapter {
 		// skin (look) of the buttons via the prearranged json file
 		skin = new Skin(Gdx.files.internal("menu.commodore64/uiskin.json"));
 
-		// loading Screen is going till loading complete and main menu starts  --------------
-		loadingSound = Gdx.audio.newSound(Gdx.files.internal("sounds/countdown.mp3"));
-		loadingStage = LoadingScreenStage.initializeUI();
+		// loading Screen is going for a fixed amount of time + till loadingStage method end() called
+		switchToStage(new LoadingScreenStage()); // start the loading screen
 
 		// creating empty stages to be filled later -----------------------------------------
 
-		gameEndStage = new Stage(new ScreenViewport());
 		currentStage = new Stage(new ScreenViewport());
 		backgroundStage = new Stage(new ScreenViewport());
 		songNameStage = new Stage(new ScreenViewport());
@@ -128,8 +113,6 @@ public class GameJam extends ApplicationAdapter {
 
 		buttonWidth = tileSize * 2;
 		buttonHeight = tileSize / 2;
-
-		loadingScreenIsRunning = true;
 
 		timePerFrame = 1f / framesPerSecond;
 
@@ -154,28 +137,6 @@ public class GameJam extends ApplicationAdapter {
 
 		// clear the screen at each frame  ---------------------------
 		Gdx.gl.glClearColor(1, 1, 1, 1);
-
-		// loadingScreen ----------------------------------------------
-		if (loadingScreenIsRunning){
-			loadingStage.act();
-			loadingStage.draw();
-			// run loading screen for 4 seconds atleast
-			if(loadingElapsed < 4){
-				loadingElapsed += Gdx.graphics.getDeltaTime();
-			} else {
-				loadingScreenIsRunning = false;
-				loadingStage.clear();
-				loadingStage.dispose();
-				// ensures game starts in menu
-				createMainMenuStage();
-				Gdx.app.log("LoadingScreen", "LoadingScreen finished");
-			}
-			// load the assets first time
-			if(!(assetsLoaded)){
-				gameJam.play(volume);
-			}
-			return;
-		}
 
 		// interaction stage ------------------------------------------
 		// for the stages, displays only stage assigned as currentStage, see method switchToStage
@@ -214,7 +175,6 @@ public class GameJam extends ApplicationAdapter {
 
 		Gdx.app.log("BoomChess", "Loading Assets: Finished");
 		// leaves the loading screen
-		assetsLoaded = true;
 	}
 
 
@@ -226,7 +186,6 @@ public class GameJam extends ApplicationAdapter {
 		backgroundStage.getViewport().update(width, height, true);
 		currentStage.getViewport().update(width, height, true);
 		songNameStage.getViewport().update(width, height, true);
-		loadingStage.getViewport().update(width, height, true);
 	}
 
 	@Override
@@ -238,13 +197,11 @@ public class GameJam extends ApplicationAdapter {
 		skin.dispose();
 
 		currentStage.dispose();
-		loadingStage.dispose();
 		backgroundStage.dispose();
 		songNameStage.dispose();
 
 		 // dispose of all music
 		 background_music.dispose();
-		 menu_music.dispose();
 	}
 
 
@@ -266,7 +223,11 @@ public class GameJam extends ApplicationAdapter {
 		* method for creating the stage for the main menu
 		 */
 
-		switchToStage(MenuStage.initializeUI());
+		// start the song
+		background_music.setVolume(volume);
+		background_music.play();
+
+		switchToStage(new MenuStage());
 	}
 
 	public static Coordinate calculateTileByPX(int pxCoordinateX, int pxCoordinateY) {
@@ -364,14 +325,6 @@ public class GameJam extends ApplicationAdapter {
 		GameJam.background_music = background_music;
 	}
 
-	public static MusicPlaylist getMenu_music() {
-		return menu_music;
-	}
-
-	public static void setMenu_music(MusicPlaylist menu_music) {
-		GameJam.menu_music = menu_music;
-	}
-
 	public static float getVolume() {
 		return volume;
 	}
@@ -388,37 +341,6 @@ public class GameJam extends ApplicationAdapter {
 		GameJam.soundVolume = soundVolume;
 	}
 
-	public static Sound getLoadingSound() {
-		return loadingSound;
-	}
-
-	public static void setLoadingSound(Sound loadingSound) {
-		GameJam.loadingSound = loadingSound;
-	}
-
-	public static Stage getGameEndStage() {
-		return gameEndStage;
-	}
-
-	public static void setGameEndStage(Stage gameEndStage) {
-		GameJam.gameEndStage = gameEndStage;
-	}
-
-	public static Stage getLoadingStage() {
-		return loadingStage;
-	}
-
-	public static void setLoadingStage(Stage loadingStage) {
-		GameJam.loadingStage = loadingStage;
-	}
-
-	public static boolean isLoadingScreenIsRunning() {
-		return loadingScreenIsRunning;
-	}
-
-	public static void setLoadingScreenIsRunning(boolean loadingScreenIsRunning) {
-		GameJam.loadingScreenIsRunning = loadingScreenIsRunning;
-	}
 
 	public static boolean isInGame() {
 		return inGame;
@@ -426,22 +348,6 @@ public class GameJam extends ApplicationAdapter {
 
 	public static void setInGame(boolean inGame) {
 		GameJam.inGame = inGame;
-	}
-
-	public static float getLoadingElapsed() {
-		return loadingElapsed;
-	}
-
-	public static void setLoadingElapsed(float loadingElapsed) {
-		GameJam.loadingElapsed = loadingElapsed;
-	}
-
-	public static boolean isAssetsLoaded() {
-		return assetsLoaded;
-	}
-
-	public static void setAssetsLoaded(boolean assetsLoaded) {
-		GameJam.assetsLoaded = assetsLoaded;
 	}
 
 	public static Stage getBackgroundStage() {

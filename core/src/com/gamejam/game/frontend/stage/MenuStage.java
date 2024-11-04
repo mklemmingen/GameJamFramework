@@ -13,15 +13,14 @@ import static com.gamejam.game.GameJam.switchToStage;
 
 public class MenuStage extends Stage{
 
-    public static Stage initializeUI() {
+    public MenuStage() {
 
-        Stage menuStage = new Stage();
-        Gdx.input.setInputProcessor(menuStage);
+        Gdx.app.log("MenuStage", "MenuStage initializing");
 
         // Begin of Main Menu Layout - Root Table arranges content automatically and adaptively as ui-structure
         final Table root = new Table();
         root.setFillParent(true);
-        menuStage.addActor(root);
+        this.addActor(root);
 
         Skin skin = GameJam.getSkin();
         float tileSize = GameJam.getTileSize();
@@ -53,7 +52,6 @@ public class MenuStage extends Stage{
         root.row();
 
        Gdx.app.log("MenuStage", "MenuStage initialized");
-       return menuStage;
     }
 
 }
