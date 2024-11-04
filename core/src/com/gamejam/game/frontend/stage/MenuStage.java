@@ -51,6 +51,8 @@ public class MenuStage extends Stage{
         });
         root.row();
 
+        GameJam.addSoundAndSettingButtons(this);
+
        Gdx.app.log("MenuStage", "MenuStage initialized");
     }
 

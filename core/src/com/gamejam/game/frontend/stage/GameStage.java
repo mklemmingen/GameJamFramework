@@ -1,6 +1,7 @@
 package com.gamejam.game.frontend.stage;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.Actor;
@@ -19,45 +20,43 @@ import com.gamejam.game.link.*;
 
 import static com.gamejam.game.GameJam.*;
 
-public class GameStage {
+public class GameStage extends Stage{
 
-    private Stage gameStage;
     private Table rootBoard;
 
     private Table moveLogoTable;
 
     // ----- Asset Variables -------------------------------------------------------------------------------------------
 
-    private static Image whiteLogo;
-    private static Image blackLogo;
+    private  Image whiteLogo;
+    private  Image blackLogo;
 
     private Texture impossibleMoveLogo;
-    private static Texture tile;
-    private static Texture empty;
-    private static Texture obstacle;
+    private  Texture empty;
+    private  Texture obstacle;
 
     // white pieces ---------------------------------------------------------------------------------
-    private static Texture whitePawn;
-    private static Texture whiteRook;
-    private static Texture whiteKnight;
-    private static Texture whiteBishop;
-    private static Texture whiteQueen;
-    private static Texture whiteKing;
-    private static Texture whiteProgrammer;
-    private static Texture whiteChancellor;
+    private  Texture whitePawn;
+    private  Texture whiteRook;
+    private  Texture whiteKnight;
+    private  Texture whiteBishop;
+    private  Texture whiteQueen;
+    private  Texture whiteKing;
+    private  Texture whiteProgrammer;
+    private  Texture whiteChancellor;
 
     // black pieces ---------------------------------------------------------------------------------
-    private static Texture blackPawn;
-    private static Texture blackRook;
-    private static Texture blackKnight;
-    private static Texture blackBishop;
-    private static Texture blackQueen;
-    private static Texture blackKing;
-    private static Texture blackProgrammer;
-    private static Texture blackChancellor;
+    private  Texture blackPawn;
+    private  Texture blackRook;
+    private  Texture blackKnight;
+    private  Texture blackBishop;
+    private  Texture blackQueen;
+    private  Texture blackKing;
+    private  Texture blackProgrammer;
+    private  Texture blackChancellor;
 
     // sounds ---------------------------------------------------------------------------------------
-    private static Texture hitSound;
+    private Sound hitSound;
 
     public GameStage() {
         Gdx.app.log("GameStage", "Creating GameStage");
@@ -65,12 +64,12 @@ public class GameStage {
         loadAllAssets();
 
         Gdx.app.log("GameStage", "creating the board game with pieces");
-        this.gameStage = new Stage(); // create gameStage object
         rootBoard = new Table(); // create rootTable
-        gameStage.addActor(rootBoard); // add rootTable to gameStage
-        gameStage.addActor(buttonsTable(getTileSize())); // add the buttonsTable to the gameStage
+        this.addActor(rootBoard); // add rootTable to gameStage
+        addActor(buttonsTable(getTileSize())); // add the buttonsTable to the gameStage
         updateGameStage(); // first update of the gameStage
-        gameStage.addActor(moveLogoTable); // add the move logo table to the stage
+        addActor(moveLogoTable); // add the move logo table to the stage
+        GameJam.addSoundAndSettingButtons(this); // add the sound and setting buttons to the stage
     }
 
     // ----- Game Methods ----------------------------------------------------------------------------------------------
@@ -112,11 +111,6 @@ public class GameStage {
         for (int j = 0; j < numRows; j++) {
             root.row();
             for (int i = 0; i < numColumns; i++) {
-
-                // add a chessBoardTile underneath the piece to build the board --------------
-                Image tileImage = new Image(tile);
-                tileImage.setSize(tileSize, tileSize);
-                root.add(tileImage).size(tileSize);
 
                 // tileWidget is "the Piece" ----------------------------------------
                 final Stack tileWidget = new Stack();
@@ -212,7 +206,7 @@ public class GameStage {
     private void playHitSound() {
         // play the hit sound
         Gdx.app.log("GameStage", "Playing the hit sound");
-        hitSound = new Texture("Misc/hitSound.png");
+        hitSound.play(GameJam.getSoundVolume());
     }
 
     private void moveNotAllowed() {
@@ -229,7 +223,7 @@ public class GameStage {
                 // add the image to the stack
                 stack.add(image);
                 // add the stack to the stage
-                gameStage.addActor(stack);
+                addActor(stack);
                 // set the position of the stack
                 stack.setPosition((float) Gdx.graphics.getWidth() / 2 - tileSize,
                         (float) Gdx.graphics.getHeight() / 2 - tileSize);
@@ -309,7 +303,7 @@ public class GameStage {
     }
 
     public Stage getStage() {
-        return gameStage;
+        return this;
     }
 
     private void setRootTable(Table root) {
@@ -319,42 +313,41 @@ public class GameStage {
     private void loadAllAssets() {
         Gdx.app.log("GameStage", "Loading Assets: Environment Textures starting"); // ----------------
 
-        impossibleMoveLogo = new Texture("Misc/impossibleMove.png");
-        tile = new Texture("Misc/Tile.png");
-        empty = new Texture("Misc/Empty.png");
-        obstacle = new Texture("Misc/Obstacle.png");
+        impossibleMoveLogo = new Texture("misc/impossibleMove.png");
+        empty = new Texture("misc/Empty.png");
+        obstacle = null; // TODO
 
-        whiteLogo = new Image(new Texture("Misc/WhiteMove.png"));
-        blackLogo = new Image(new Texture("Misc/BlackMove.png"));
+        whiteLogo = new Image(new Texture("misc/player1.png"));
+        blackLogo = new Image(new Texture("misc/player2.png"));
 
 
         Gdx.app.log("GameStage", "Loading Assets: Environment Textures loading finished"); // --------
         Gdx.app.log("GameStage", "Loading Assets: Piece Textures starting"); // ----------------------
 
         // white pieces ----------------------------------------------------
-        whitePawn = new Texture("white/pawn.png");
-        whiteRook = new Texture("white/rook.png");
-        whiteKnight = new Texture("white/knight.png");
-        whiteBishop = new Texture("white/bishop.png");
-        whiteQueen = new Texture("white/queen.png");
-        whiteKing = new Texture("white/king.png");
-        whiteProgrammer = new Texture("white/programmer.png");
-        whiteChancellor = new Texture("white/chancellor.png");
+        whitePawn = new Texture("white/whitepawn.png");
+        whiteRook = new Texture("white/whiterook.png");
+        whiteKnight = new Texture("white/whiteknight.png");
+        whiteBishop = new Texture("white/whitebishop.png");
+        whiteQueen = new Texture("white/whitequeen.png");
+        whiteKing = new Texture("white/whiteking.png");
+        whiteProgrammer = new Texture("white/whiteprogrammer.png");
+        whiteChancellor = new Texture("white/whitechancellor.png");
 
         // black pieces ----------------------------------------------------
-        blackPawn = new Texture("black/pawn.png");
-        blackRook = new Texture("black/rook.png");
-        blackKnight = new Texture("black/knight.png");
-        blackBishop = new Texture("black/bishop.png");
-        blackQueen = new Texture("black/queen.png");
-        blackKing = new Texture("black/king.png");
-        blackProgrammer = new Texture("black/programmer.png");
-        blackChancellor = new Texture("black/chancellor.png");
+        blackPawn = new Texture("black/blackpawn.png");
+        blackRook = new Texture("black/blackrook.png");
+        blackKnight = new Texture("black/blackknight.png");
+        blackBishop = new Texture("black/blackbishop.png");
+        blackQueen = new Texture("black/blackqueen.png");
+        blackKing = new Texture("black/blackking.png");
+        blackProgrammer = new Texture("black/blackprogrammer.png");
+        blackChancellor = new Texture("black/blackchancellor.png");
 
         Gdx.app.log("GameStage", "Loading Assets: Piece Textures starting"); // ----------------------
         Gdx.app.log("GameStage", "Loading Assets: Sounds starting"); // ------------------------------
 
-        hitSound = new Texture("Misc/hitSound.png");
+        hitSound = Gdx.audio.newSound(Gdx.files.internal("sounds/hit.mp3"));
 
         Gdx.app.log("GameStage", "Loading Assets: Sounds finished"); // ------------------------------
     }
@@ -368,7 +361,7 @@ public class GameStage {
         backTable.setSize(tileSize * 5, tileSize * 2f);
         // bottom right the table in the parent container
         backTable.setPosition(Gdx.graphics.getWidth() - backTable.getWidth(), tileSize);
-        gameStage.addActor(backTable); // Add the table to the stage
+        addActor(backTable); // Add the table to the stage
 
         // Exit to Main Menu button to return to the main menu
         TextButton menuButton = new TextButton("Main Menu", GameJam.getSkin());

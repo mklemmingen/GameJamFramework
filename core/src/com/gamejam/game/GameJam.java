@@ -5,10 +5,15 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.Button;
+import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.gamejam.game.backend.BackMan;
@@ -39,7 +44,7 @@ public class GameJam extends ApplicationAdapter {
 
 	// volume of Sounds
 
-	private static float volume = 0.2f;  // variable to store the current MUSIC volume level
+	private static float volume = 0.5f;  // variable to store the current MUSIC volume level
 
 	private static float soundVolume = 0.20f;  // variable to store the current SOUND volume level
 
@@ -194,6 +199,57 @@ public class GameJam extends ApplicationAdapter {
 		newStage.setViewport(viewport);
 		currentStage = newStage;
 		Gdx.input.setInputProcessor(currentStage);
+	}
+
+	public static void addSoundAndSettingButtons(Stage stage) {
+		/*
+		 * method for adding the sound and setting buttons to a stage
+		 */
+		Image soundButtonImage = new Image(new Texture(Gdx.files.internal("misc/sound.png")));
+		Image settingButtonImage = new Image(new Texture(Gdx.files.internal("misc/settings.png")));
+
+		// settings -----------------------------------------------------
+		// settings at top left
+		Button settingButton = new Button(skin);
+		settingButton.add(settingButtonImage);
+		settingButton.setSize(tileSize, tileSize);
+		settingButton.setPosition(0, Gdx.graphics.getHeight() - tileSize);
+		settingButton.addListener(new ClickListener() {
+			@Override
+			public void clicked(InputEvent event, float x, float y) {
+				// for now, just display a texture for 3 seconds that says "Settings not implemented"
+
+			}
+		});
+		stage.addActor(settingButton);
+
+
+		// sounds --------------------------------------------------------
+		// sound at top right
+		Button soundButton = new Button(skin);
+		soundButton.add(soundButtonImage);
+		soundButton.setSize(tileSize, tileSize);
+		soundButton.setPosition(Gdx.graphics.getWidth() - tileSize, Gdx.graphics.getHeight() - tileSize);
+		soundButton.addListener(new ClickListener() {
+			@Override
+			public void clicked(InputEvent event, float x, float y) {
+				// when volume 0, set to 1 and vice versa
+				if (volume == 0) {
+					volume = 0.5f;
+					background_music.setVolume(volume);
+				} else {
+					volume = 0;
+					background_music.setVolume(volume);
+				}
+				// sound volume
+				if (soundVolume == 0) {
+					soundVolume = 0.20f;
+				} else {
+					soundVolume = 0;
+				}
+			}
+		});
+		stage.addActor(soundButton);
 	}
 
 	public static void createMainMenuStage() {
