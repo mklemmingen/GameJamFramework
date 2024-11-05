@@ -9,14 +9,13 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.scenes.scene2d.ui.Button;
-import com.badlogic.gdx.scenes.scene2d.ui.Image;
-import com.badlogic.gdx.scenes.scene2d.ui.Label;
-import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
+import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.gamejam.game.backend.BackMan;
+import com.gamejam.game.frontend.actors.ThreeSecondsSelfDestruct;
 import com.gamejam.game.frontend.sound.MusicPlaylist;
 import com.gamejam.game.frontend.stage.LoadingScreenStage;
 import com.gamejam.game.frontend.stage.MenuStage;
@@ -35,6 +34,7 @@ public class GameJam extends ApplicationAdapter {
 	private static Skin skin;
 	private static int numberObstacle; // number of obstacles in the default game mode, SPECIFIC TO CHESS VARIANT
 	private static Stage currentStage;
+	private static Stage informationStage;
 
 	// for setting the current "Mover" of the game / if a Move has been valid ------------------------------------------
 	private static boolean legitTurn = false;
@@ -64,14 +64,20 @@ public class GameJam extends ApplicationAdapter {
 	private static float buttonHeight;
 
 	// -------------------------------------------- --------------------------------------------------------------------
+	// sound and music -- and buttons
 
 	private static Sound gameJam;
-
-	// stage for the current song name that is playing -- sound and music
 
 	private static Stage songNameStage;
 	private static Label musicLabel;
 	private static float musicLabelScale;
+
+	private static Button soundButton;
+	private static Image soundOnImage; // inserted into Pheno when sound is on
+	private static Image soundOffImage; // inserted into Pheno when sound is off
+
+	private static Image settingButtonImage;
+	private static Button settingButton;
 
 	// -------------------------------------------- Number of Columns and Rows -----------------------------------------
 
@@ -92,6 +98,8 @@ public class GameJam extends ApplicationAdapter {
 		// creation of the batch for drawing the images -------------------------------------
 		batch = new SpriteBatch();
 		viewport = new ScreenViewport();
+
+		informationStage = new Stage(viewport, batch);
 
 		// loading Screen is going for a fixed amount of time + till loadingStage method end() called
 		switchToStage(new LoadingScreenStage(viewport, batch)); // start the loading screen
@@ -128,12 +136,20 @@ public class GameJam extends ApplicationAdapter {
 		// for the stages, see method switchToStage
 		currentStage.act(Gdx.graphics.getDeltaTime());
 		currentStage.draw();
+
+		// information stage for textual and/or signal needs that cannot be displayed from within currentStage -----
+		informationStage.act(Gdx.graphics.getDeltaTime());
+		informationStage.draw();
 	}
 
 	private void loadAllAssets() {
 		/*
 		This method gets called during the main loading Stage runs
 		 */
+
+		// load the sound for the game
+
+		Gdx.app.log("GameJam", "Loading Assets: Music Loading starting"); // ------------------------
 
 		// music label
 		// load empty musicLabel and put its position to the lower left of the screen
@@ -143,14 +159,70 @@ public class GameJam extends ApplicationAdapter {
 		// scale down by 0.75 to 0.25 of current size
 		musicLabel.setFontScale(musicLabelScale);
 
-		// load the sound for the game
-
-		Gdx.app.log("GameJam", "Loading Assets: Music Loading starting"); // ------------------------
+		// TODO add the musicLabel to the informationstage
 
 		// load the background music into MusicPlaylist object
 		background_music = new MusicPlaylist();
 		background_music.addSong("music/8BitCorpoLofi.mp3",
 				"Lofi 8 Bit Mixtape", "miguelangell960");
+
+		// load the audio buttons and images
+		// sound at top right -----------------------------------------------------------------------------------------
+		// Sound on
+		soundOnImage = new Image(new Texture(Gdx.files.internal("misc/sound.png")));
+		soundOnImage.setSize(tileSize, tileSize);
+		soundOnImage.setPosition(Gdx.graphics.getWidth() - tileSize*2, Gdx.graphics.getHeight() - tileSize*2);
+
+		// sound off
+		soundOffImage = new Image(new Texture(Gdx.files.internal("misc/soundOff.png")));
+		soundOffImage.setSize(tileSize, tileSize);
+		soundOffImage.setPosition(Gdx.graphics.getWidth() - tileSize*2, Gdx.graphics.getHeight() - tileSize*2);
+
+		// At start, its SoundOn
+		soundButton = new Button(soundOnImage, new Button.ButtonStyle());
+		soundButton.setSize(tileSize*2, tileSize*2);
+		soundButton.setPosition(Gdx.graphics.getWidth() - soundButton.getWidth(),
+				Gdx.graphics.getHeight() - soundButton.getHeight());
+
+		// settings at top left -------------------------------------------------------------------------------------
+		settingButtonImage = new Image(new Texture(Gdx.files.internal("misc/settings.png")));
+		settingButtonImage.setSize(tileSize, tileSize);
+		settingButtonImage.setPosition(tileSize, Gdx.graphics.getHeight());
+		settingButton = new Button(settingButtonImage, new Button.ButtonStyle());
+		settingButton.setSize(tileSize*2, tileSize*2);
+		settingButton.setPosition(0, Gdx.graphics.getHeight() - settingButton.getHeight());
+
+		// Listeners ------------------
+		soundButton.addListener(new ClickListener() {
+			@Override
+			public void clicked(InputEvent event, float x, float y) {
+				// when volume 0, set to 1 and vice versa
+				// ongoing sound volumes are not affected, but future ones though to a change in soundVolume
+				soundButton.clearChildren();
+				if (volume == 0) {
+					soundButton.add(soundOnImage);
+					volume = 0.5f;
+					soundVolume = 0.20f;
+					background_music.setVolume(volume);
+				} else {
+					soundButton.add(soundOffImage);
+					volume = 0;
+					soundVolume = 0;
+					background_music.setVolume(volume);
+				}
+			}
+		});
+
+		settingButton.addListener(new ClickListener() {
+			@Override
+			public void clicked(InputEvent event, float x, float y) {
+				// for now, just display a texture for 3 seconds that says "Settings not implemented"
+				// if you would like settings, here is the place you should add a method to display it
+				ThreeSecondsSelfDestruct settingsNotImpl = new ThreeSecondsSelfDestruct(
+						new Image(new Texture("misc/settingsNotImplemented.png")));
+				informationStage.addActor(settingsNotImpl);
+			}
+		});
 
 		Gdx.app.log("GameJam", "Loading Assets: Music Loading finished"); // -----------------------
 
@@ -168,6 +240,7 @@ public class GameJam extends ApplicationAdapter {
 		 * fits the needed values when a resize has happened, when a resize has happened
 		 */
 		currentStage.getViewport().update(width, height, true);
+		informationStage.getViewport().update(width, height, true);
 	}
 
 	@Override
@@ -179,6 +252,7 @@ public class GameJam extends ApplicationAdapter {
 		skin.dispose();
 
 		currentStage.dispose();
+		informationStage.dispose();
 
 		 // dispose of all music
 		 background_music.dispose();
@@ -205,50 +279,10 @@ public class GameJam extends ApplicationAdapter {
 		/*
 		 * method for adding the sound and setting buttons to a stage
 		 */
-		Image soundButtonImage = new Image(new Texture(Gdx.files.internal("misc/sound.png")));
-		Image settingButtonImage = new Image(new Texture(Gdx.files.internal("misc/settings.png")));
 
 		// settings -----------------------------------------------------
-		// settings at top left
-		Button settingButton = new Button(skin);
-		settingButton.add(settingButtonImage);
-		settingButton.setSize(tileSize, tileSize);
-		settingButton.setPosition(0, Gdx.graphics.getHeight() - tileSize);
-		settingButton.addListener(new ClickListener() {
-			@Override
-			public void clicked(InputEvent event, float x, float y) {
-				// for now, just display a texture for 3 seconds that says "Settings not implemented"
-
-			}
-		});
 		stage.addActor(settingButton);
-
-
 		// sounds --------------------------------------------------------
-		// sound at top right
-		Button soundButton = new Button(skin);
-		soundButton.add(soundButtonImage);
-		soundButton.setSize(tileSize, tileSize);
-		soundButton.setPosition(Gdx.graphics.getWidth() - tileSize, Gdx.graphics.getHeight() - tileSize);
-		soundButton.addListener(new ClickListener() {
-			@Override
-			public void clicked(InputEvent event, float x, float y) {
-				// when volume 0, set to 1 and vice versa
-				if (volume == 0) {
-					volume = 0.5f;
-					background_music.setVolume(volume);
-				} else {
-					volume = 0;
-					background_music.setVolume(volume);
-				}
-				// sound volume
-				if (soundVolume == 0) {
-					soundVolume = 0.20f;
-				} else {
-					soundVolume = 0;
-				}
-			}
-		});
 		stage.addActor(soundButton);
 	}
 
