@@ -61,15 +61,20 @@ public class GameStage extends Stage{
     public GameStage() {
         Gdx.app.log("GameStage", "Creating GameStage");
 
+        Gdx.app.log("Game", "Starting Game");
+        GameJam.getBackend().startGame();
+        Gdx.app.log("Game", "Game Started");
+
         loadAllAssets();
 
-        Gdx.app.log("GameStage", "creating the board game with pieces");
+        Gdx.app.log("GameStage", "visually creating the board game with pieces");
         rootBoard = new Table(); // create rootTable
         this.addActor(rootBoard); // add rootTable to gameStage
         addActor(buttonsTable(getTileSize())); // add the buttonsTable to the gameStage
-        updateGameStage(); // first update of the gameStage
-        addActor(moveLogoTable); // add the move logo table to the stage
         GameJam.addSoundAndSettingButtons(this); // add the sound and setting buttons to the stage
+        addActor(moveLogoTable); // add the move logo table to the stage
+
+        updateGameStage(); // first update of the gameStage
     }
 
     // ----- Game Methods ----------------------------------------------------------------------------------------------

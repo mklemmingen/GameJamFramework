@@ -1,14 +1,24 @@
 package com.gamejam.game.backend;
 
-import com.gamejam.game.link.Board;
-import com.gamejam.game.link.Coordinate;
-import com.gamejam.game.link.FrontendZugriff;
-import com.gamejam.game.link.GameState;
+import com.gamejam.game.link.*;
 
 public class BackMan implements FrontendZugriff {
     /*
         * This class implements the interface linking front to backend.
      */
+
+    // ---------------- ATTRIBUTES
+
+    private Board gameBoard;
+    private GameState gameState;
+
+
+    // ---------------- METHODS
+
+    public BackMan() {
+        // Constructor! ---------------------------
+
+    }
 
 
     /*
@@ -17,6 +27,17 @@ public class BackMan implements FrontendZugriff {
     @Override
     public void startGame() {
 
+        gameState = GameState.WHITE_TURN; // setting starting GameState
+
+        // create new board and set it up - EMPTY BOARD
+        Tile[][] tiles = new Tile[8][8];
+        for (int i = 0; i < 8; i++){
+            for (int j = 0; j < 8; j++){
+                tiles[i][j] = new Tile();
+            }
+        }
+
+        gameBoard = new Board(tiles); // 
     }
 
     /*
@@ -24,7 +45,7 @@ public class BackMan implements FrontendZugriff {
      */
     @Override
     public Board getBoard() {
-        return null;
+        return gameBoard;
     }
 
     /*
@@ -33,7 +54,7 @@ public class BackMan implements FrontendZugriff {
      */
     @Override
     public GameState getGameState() {
-        return null;
+        return gameState;
     }
 
     /*
@@ -43,7 +64,7 @@ public class BackMan implements FrontendZugriff {
      */
     @Override
     public boolean isValidMove(Coordinate start, Coordinate end) {
-        return false;
+        return true;
     }
 
     /*
@@ -53,6 +74,47 @@ public class BackMan implements FrontendZugriff {
      */
     @Override
     public boolean movePiece(Coordinate start, Coordinate end) {
+        boolean returnBool = gameBoard.updateByExchange(start, end);
+        switchGameState();
+        // if a king has been killed,
+        if (returnBool){
+            // check if the game is over
+            if (isGameOver()){
+                gameState = GameState.NOT_IN_GAME;
+            }
+        }
+        return returnBool;
+    }
+
+    // ---------- DUMMIES for US TO USE IN TESTING FOR VALIDMOVE AND MOVEPIECE
+    private void switchGameState(){
+        // switch between white turn and black turn
+        if (gameState == GameState.WHITE_TURN){
+            gameState = GameState.BLACK_TURN;
+        } else {
+            gameState = GameState.WHITE_TURN;
+        }
+    }
+    private boolean isGameOver(){
+        // check if the game is over
+        // iterate over the board and check if there are any pieces left
+        Tile[][] tiles = gameBoard.getGameBoard();
+
+        boolean whiteExists = false;
+        boolean blackExists = false;
+        for (int i = 0; i < 8; i++){
+            for (int j = 0; j < 8; j++){
+                if (tiles[i][j].getPieceType() != null){
+                    if (tiles[i][j].getPieceType()==Piece.KING) {
+                        if (tiles[i][j].getTeamColor() == TeamColor.WHITE) {
+                            whiteExists = true;
+                        } else {
+                            blackExists = true;
+                        }
+                    }
+                }
+            }
+        }
         return false;
     }
 }
