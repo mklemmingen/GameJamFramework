@@ -11,11 +11,10 @@ import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
-import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.gamejam.game.backend.BackMan;
-import com.gamejam.game.frontend.actors.ThreeSecondsSelfDestruct;
+import com.gamejam.game.frontend.actors.OneSecondsSelfDestruct;
 import com.gamejam.game.frontend.sound.MusicPlaylist;
 import com.gamejam.game.frontend.stage.LoadingScreenStage;
 import com.gamejam.game.frontend.stage.MenuStage;
@@ -218,8 +217,9 @@ public class GameJam extends ApplicationAdapter {
 			public void clicked(InputEvent event, float x, float y) {
 				// for now, just display a texture for 3 seconds that says "Settings not implemented"
 				// if you would like settings, here is the place you should add a method to display it
-				ThreeSecondsSelfDestruct settingsNotImpl = new ThreeSecondsSelfDestruct(
-						new Image(new Texture("misc/settingsNotImplemented.png")));
+				OneSecondsSelfDestruct settingsNotImpl = new OneSecondsSelfDestruct(
+						new Image(new Texture("misc/settingsNotImplemented.png")),
+						(float) Gdx.graphics.getWidth() / 2, (float) Gdx.graphics.getHeight() - tileSize*2);
 				informationStage.addActor(settingsNotImpl);
 			}
 		});
