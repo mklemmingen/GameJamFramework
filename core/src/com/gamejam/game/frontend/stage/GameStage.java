@@ -3,7 +3,9 @@ package com.gamejam.game.frontend.stage;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.scenes.scene2d.Action;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
@@ -15,17 +17,17 @@ import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.scenes.scene2d.utils.DragListener;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Array;
-import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.gamejam.game.GameJam;
 import com.gamejam.game.backend.BackMan;
+import com.gamejam.game.frontend.actors.OneSecondsSelfDestruct;
 import com.gamejam.game.link.*;
 
 import static com.gamejam.game.GameJam.*;
-import static com.gamejam.game.link.Piece.PAWN;
 
 public class GameStage extends Stage{
 
     private BackMan backend;
+    Tile[][] gameBoardArray;
 
     private Table rootBoard; // rootTable for the gameBoard
 
@@ -105,55 +107,24 @@ public class GameStage extends Stage{
         updateGameStage(); // first update of the gameStage
     }
 
-    private void intialisePlayerData() {
-
-        lostPieces1Data = new Array<>();
-        lostPieces2Data = new Array<>();
-
-        float tileSize = getTileSize();
-
-        float statAndLogoWidth = tileSize*4;
-
-        // player 1 data is on the left side of the screen
-        player1WHITElogo = new Image(new Texture("misc/player1.png"));
-        player1WHITElogo.setSize(statAndLogoWidth, tileSize*1.5f);
-        // x position of player1
-        float xpospl1 = (float) Gdx.graphics.getWidth()/4-statAndLogoWidth;
-        // centralise at the first fourth of the screen width
-        player1WHITElogo.setPosition(xpospl1, tileSize*8);
-        addActor(player1WHITElogo);
-        // player 1 data visualisation of the pieces it has lost is underneath it in a 2 wide table
-        player1stats = new Table();
-        player1stats.setSize(statAndLogoWidth, tileSize*2);
-        player1stats.setPosition(xpospl1, tileSize*8-player1stats.getHeight()-player1WHITElogo.getHeight());
-        addActor(player1stats);
-
-        // player 2 data is on the right side of the screen
-        player2BLACKlogo = new Image(new Texture("misc/player2.png"));
-        player2BLACKlogo.setSize(statAndLogoWidth, tileSize*1.5f);
-        //-tilesize/2 to accomodate for the width of the 1234 deco
-        float xpospl2 = (float) Gdx.graphics.getWidth()- (float) Gdx.graphics.getWidth()/4-(tileSize/2);
-        player2BLACKlogo.setPosition(xpospl2, tileSize*8);
-        addActor(player2BLACKlogo);
-        // player 2 data visualisation of the pieces it has lost is underneath it in a 2 wide table
-        player2stats = new Table();
-        player2stats.setSize(statAndLogoWidth, tileSize*2);
-        player2stats.setPosition(xpospl2, tileSize*6.5f);
-        addActor(player2stats);
-    }
-
     // ----- Game Methods ----------------------------------------------------------------------------------------------
 
     /*
      * Method to create the game stage, each actor is added to the stage and the stage is returned
      */
     private void updateGameStage() {
-
         Gdx.app.log("GameStage", "Updating the GameStage");
 
         // ----- getting and setting all info from GameJam we need to create the current iteration of the board
 
-        final Tile[][] gameBoardArray = backend.getBoard().getGameBoard();
+        // update backend
+        backend = GameJam.getBackend();
+
+        // update board
+        gameBoardArray = backend.getBoard().getGameBoard();
+
+        // print out the board for debugging
+        backend.getBoard().printBoard();
 
         if(gameBoardArray == null){
             Gdx.app.log("Game", "The Tile[][] inside Board is null");
@@ -161,12 +132,20 @@ public class GameStage extends Stage{
             return;
         }
 
+        // getting GameState and setting the playerLogo to have a slight breathing animation to indicate who's turn
+        GameState state = backend.getGameState();
+        if (state == GameState.WHITE_TURN) {
+            player2BLACKlogo.clearActions();
+            player1WHITElogo.addAction(getBreathingAction(player1WHITElogo));
+        } else {
+            player1WHITElogo.clearActions();
+            player2BLACKlogo.addAction(getBreathingAction(player2BLACKlogo));
+        }
+
+        // -----------------------------------------------------------------------------
+
         float tileSize = getTileSize();
-
-        // ---------------------------------------------------------------------------------------------------
-
         Table root = new Table();
-
         // for the size of the tiles
         int numRows = getNumberRows();
         int numColumns = getNumberColumns();
@@ -176,24 +155,23 @@ public class GameStage extends Stage{
         root.setPosition((float) Gdx.graphics.getWidth() / 2 - root.getWidth() / 2,
                 (float) Gdx.graphics.getHeight() / 2 - root.getHeight() / 2);
 
-        int numberOfPixelsOnBoard = 0;
-
         for (int j = 0; j < numRows; j++) {
             root.row();
             for (int i = 0; i < numColumns; i++) {
 
-                // tileWidget is "the Piece" or an empty tile -----------------------
+                // tileWidget is "the Piece" or an "empty" tile -----------------------
 
                 final Stack tileWidget = new Stack();
                 tileWidget.setSize(tileSize, tileSize);
 
-                Texture pieceTexture = getTextFromTile(gameBoardArray[i][j]);
-                Image pieceVis = new Image(pieceTexture);
-                pieceVis.setSize(tileSize, tileSize);
-                tileWidget.add(pieceVis);
-
-                // adding the number of pixels of the image to the counter to have a debug value
-                numberOfPixelsOnBoard += (int) (pieceVis.getImageHeight()*pieceVis.getImageWidth());
+                TextureRegion pieceTextureRegion = getTextFromTile(gameBoardArray[i][j]);
+                if (pieceTextureRegion != null) {
+                    Image pieceVis = new Image(pieceTextureRegion);
+                    pieceVis.setSize(tileSize, tileSize);
+                    tileWidget.add(pieceVis);
+                } else {
+                    Gdx.app.log("ERROR", "The pieceTextureRegion is null");
+                }
 
                 final int finalI = i;
                 final int finalJ = j;
@@ -222,6 +200,7 @@ public class GameStage extends Stage{
                                 moveNotAllowed();
                                 event.cancel();
                             }
+                            tileWidget.setZIndex(9999);
                         }
 
                         @Override
@@ -265,14 +244,13 @@ public class GameStage extends Stage{
                                     addPieceTypetoPlayerData(tempPiece, tempColor);
                                 }
                                 Gdx.app.log("GameStage", "a drag has stopped, a move WAS made");
-                                updateGameStage();
                                 updateVisualisePlayerData();
+                                updateGameStage();
                             } else {
                                 Gdx.app.log("GameStage", "a drag has stopped, a move WAS NOT made");
                                 // we return and display a move not allowed actor on screen for 2 seconds
                                 moveNotAllowed();
                                 // resets gameBoard, since move wasn't allowed, and we have to set the drag back to start
-                                updateGameStage();
                             }
                         }
                     });
@@ -280,9 +258,31 @@ public class GameStage extends Stage{
                 root.add(tileWidget).size(tileSize);
             }
         }
-        setRootTable(root);
+        // Setting the root table to the rootBoard and adding it to the stage
+        rootBoard.clear();
+        rootBoard.add(root).center();
+        rootBoard.setSize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        rootBoard.setPosition(0, 0);
+        rootBoard.setZIndex(1);
 
-        Gdx.app.log("GameStage", "The number of pixels on the board is: " + numberOfPixelsOnBoard);
+        // making sure that the board is underlaying the drag and drop layer
+        board.setZIndex(0);
+
+        Gdx.app.log("GameStage", "GameStage updated");
+    }
+
+    private Action getBreathingAction(final Image playerLogo) {
+        // breathing Action, where the scale changes from 1 to 1.025 every 2 seconds
+        return new Action() {
+            float time = 0;
+            @Override
+            public boolean act(float delta) {
+                time += delta;
+                float scale = (float) (1 + 0.025 * Math.sin(time * 2));
+                playerLogo.setScale(scale);
+                return false;
+            }
+        };
     }
 
     private void addPieceTypetoPlayerData(Piece piecetype, TeamColor teamColor) {
@@ -302,40 +302,30 @@ public class GameStage extends Stage{
 
     private void moveNotAllowed() {
         Gdx.app.log("GameStage", "The Move was not allowed, displaying the NotAllowed Actor");
-        class NotAllowed extends Actor{
-            NotAllowed(){
-                // create a new Stack
-                Stack stack = new Stack();
-                // create a new Image
-                Image image = new Image(impossibleMoveLogo);
-                // set the size of the image
-                float tileSize = getTileSize();
-                image.setSize(tileSize, tileSize);
-                // add the image to the stack
-                stack.add(image);
-                // add the stack to the stage
-                addActor(stack);
-                // set the position of the stack
-                stack.setPosition((float) Gdx.graphics.getWidth() / 2 - tileSize,
-                        (float) Gdx.graphics.getHeight() / 2 - tileSize);
-            }
-        }
+        OneSecondsSelfDestruct notAllowed = new OneSecondsSelfDestruct(new Image(impossibleMoveLogo),
+                (float) Gdx.graphics.getWidth() /2, (float) Gdx.app.getGraphics().getHeight() /2);
+        notAllowed.setZIndex(10);
+        notAllowed.setVisible(true);
+        notAllowed.setPosition((float) Gdx.graphics.getWidth() /2, (float) Gdx.app.getGraphics().getHeight() /2);
+        addActor(notAllowed);
+        updateGameStage();
     }
 
     /*
     * Method to take a piece and return the class attribute loaded Texture of that piece
      */
-    private Texture getTextFromTile(Tile tile) {
+    private TextureRegion getTextFromTile(Tile tile) {
         // if tile has null attributes, it means it is empty
-        if (tile.getPieceType() == null) {
-            return empty;
+        if (tile.getPieceType() == null || tile.getTeamColor() == null) {
+            return turnTextureIntoTextureRegion(empty);
         }
+
         TeamColor teamColor = tile.getTeamColor();
         Piece pieceType = tile.getPieceType();
 
         // checking for niche cases, where tile has a team color but is actually an obstacle
         if (pieceType == Piece.OBSTACLE) {
-            return obstacle;
+            return turnTextureIntoTextureRegion(obstacle);
         }
 
         switch (teamColor) {
@@ -345,55 +335,59 @@ public class GameStage extends Stage{
                 return getBlackPieceTexture(pieceType);
             default:
                 Gdx.app.log("GameStage", "NO valid team color -> Empty");
-                return empty;
+                return turnTextureIntoTextureRegion(empty);
         }
     }
 
-    private Texture getWhitePieceTexture(Piece pieceType) {
+    private TextureRegion turnTextureIntoTextureRegion(Texture texture) {
+        return new TextureRegion(texture);
+    }
+
+    private TextureRegion getWhitePieceTexture(Piece pieceType) {
         switch (pieceType) {
             case PAWN:
-                return whitePawn;
+                return new TextureRegion(whitePawn);
             case ROOK:
-                return whiteRook;
+                return new TextureRegion(whiteRook);
             case KNIGHT:
-                return whiteKnight;
+                return new TextureRegion(whiteKnight);
             case BISHOP:
-                return whiteBishop;
+                return new TextureRegion(whiteBishop);
             case QUEEN:
-                return whiteQueen;
+                return new TextureRegion(whiteQueen);
             case KING:
-                return whiteKing;
+                return new TextureRegion(whiteKing);
             case PROGRAMMER:
-                return whiteProgrammer;
+                return new TextureRegion(whiteProgrammer);
             case CHANCELLOR:
-                return whiteChancellor;
+                return new TextureRegion(whiteChancellor);
             default:
                 Gdx.app.log("GameStage", "NO valid piece type -> Empty");
-                return empty;
+                return new TextureRegion(empty);
         }
     }
 
-    private Texture getBlackPieceTexture(Piece pieceType) {
+    private TextureRegion getBlackPieceTexture(Piece pieceType) {
         switch (pieceType) {
             case PAWN:
-                return blackPawn;
+                return new TextureRegion(blackPawn);
             case ROOK:
-                return blackRook;
+                return new TextureRegion(blackRook);
             case KNIGHT:
-                return blackKnight;
+                return new TextureRegion(blackKnight);
             case BISHOP:
-                return blackBishop;
+                return new TextureRegion(blackBishop);
             case QUEEN:
-                return blackQueen;
+                return new TextureRegion(blackQueen);
             case KING:
-                return blackKing;
+                return new TextureRegion(blackKing);
             case PROGRAMMER:
-                return blackProgrammer;
+                return new TextureRegion(blackProgrammer);
             case CHANCELLOR:
-                return blackChancellor;
+                return new TextureRegion(blackChancellor);
             default:
                 Gdx.app.log("GameStage", "NO valid piece type -> Empty");
-                return empty;
+                return new TextureRegion(empty);
         }
     }
 
@@ -401,19 +395,12 @@ public class GameStage extends Stage{
         return this;
     }
 
-    private void setRootTable(Table root) {
-        this.rootBoard = root;
-        rootBoard.center();
-        rootBoard.pack();
-        rootBoard.setZIndex(1);
-    }
-
     private void loadAllAssets() {
         Gdx.app.log("GameStage", "Loading Assets: Environment Textures starting"); // ----------------
 
         impossibleMoveLogo = new Texture("misc/impossibleMove.png");
         empty = new Texture("misc/Empty.png");
-        obstacle = null; // TODO
+        obstacle = new Texture("misc/obstacle.png");
 
         board = new Image(new Texture("board/board.png"));
         decovertical = new Image(new Texture("board/12345678.png"));
@@ -522,13 +509,18 @@ public class GameStage extends Stage{
         // we get it from the GameJam class to allow for dynamic resolution changes
         float tileSize = getTileSize();
 
+        // player 1 -----------------------------------------------------------------
+        // clear the table
+        player1stats.clear();
         // iterate through player1array of lost pieces, get each pieces texture and add it to the table
         // the table is 2 tiles wide, so we make each piece have a size of half a tilesize and fit 4 in a row
 
         int counter = 0;
         for (Piece piece : lostPieces1Data) {
             // get the texture of the piece
-            Texture pieceTexture = getTextFromTile(new Tile(piece, TeamColor.WHITE));
+            TextureRegion pieceTexture = getTextFromTile(new Tile(piece, TeamColor.WHITE));
+            pieceTexture.setRegionHeight((int) tileSize);
+            pieceTexture.setRegionWidth((int) tileSize);
             // create an image with the texture
             Image pieceImage = new Image(pieceTexture);
             pieceImage.setSize(tileSize/2, tileSize/2);
@@ -541,14 +533,18 @@ public class GameStage extends Stage{
             }
             counter += 1;
         }
-
+        // ----------- player 2 ----------------------------------------------------
+        // clear the table
+        player2stats.clear();
         // iterate through player2array of lost pieces, get each pieces texture and add it to the table
         // the table is also 2 tiles wide, so we make each piece have a size of half a tilesize and fit 4 in a row
 
         counter = 0;
         for (Piece piece : lostPieces2Data) {
             // get the texture of the piece
-            Texture pieceTexture = getTextFromTile(new Tile(piece, TeamColor.BLACK));
+            TextureRegion pieceTexture = getTextFromTile(new Tile(piece, TeamColor.BLACK));
+            pieceTexture.setRegionHeight((int) tileSize);
+            pieceTexture.setRegionWidth((int) tileSize);
             // create an image with the texture
             Image pieceImage = new Image(pieceTexture);
             pieceImage.setSize(tileSize/2, tileSize/2);
@@ -561,5 +557,42 @@ public class GameStage extends Stage{
             }
             counter += 1;
         }
+    }
+
+    private void intialisePlayerData() {
+
+        lostPieces1Data = new Array<>();
+        lostPieces2Data = new Array<>();
+
+        float tileSize = getTileSize();
+
+        float statAndLogoWidth = tileSize*4;
+
+        // player 1 data is on the left side of the screen
+        player1WHITElogo = new Image(new Texture("misc/player1chess.png"));
+        player1WHITElogo.setSize(statAndLogoWidth, tileSize*1.5f);
+        // x position of player1
+        float xpospl1 = (float) Gdx.graphics.getWidth()/4-statAndLogoWidth;
+        // centralise at the first fourth of the screen width
+        player1WHITElogo.setPosition(xpospl1, tileSize*8);
+        addActor(player1WHITElogo);
+        // player 1 data visualisation of the pieces it has lost is underneath it in a 2 wide table
+        player1stats = new Table();
+        player1stats.setSize(statAndLogoWidth, tileSize*2);
+        player1stats.setPosition(xpospl1, tileSize*8-player1stats.getHeight()-player1WHITElogo.getHeight());
+        addActor(player1stats);
+
+        // player 2 data is on the right side of the screen
+        player2BLACKlogo = new Image(new Texture("misc/player2chess.png"));
+        player2BLACKlogo.setSize(statAndLogoWidth, tileSize*1.5f);
+        //-tilesize/2 to accomodate for the width of the 1234 deco
+        float xpospl2 = (float) Gdx.graphics.getWidth()- (float) Gdx.graphics.getWidth()/4-(tileSize/2);
+        player2BLACKlogo.setPosition(xpospl2, tileSize*8);
+        addActor(player2BLACKlogo);
+        // player 2 data visualisation of the pieces it has lost is underneath it in a 2 wide table
+        player2stats = new Table();
+        player2stats.setSize(statAndLogoWidth, tileSize*2);
+        player2stats.setPosition(xpospl2, tileSize*8-player2stats.getHeight()-player2BLACKlogo.getHeight());
+        addActor(player2stats);
     }
 }
