@@ -5,5 +5,5 @@ public enum TeamColor {
      * This enum is used to define the team color of the Pieces
      */
 
-    WHITE, BLACK
+    WHITE, BLACK, NONE
 }

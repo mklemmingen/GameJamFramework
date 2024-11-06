@@ -59,6 +59,10 @@ public class BackMan implements FrontendZugriff {
             }
         }
 
+        // add a obstacle in the middle of the board
+        tiles[3][3] = new Tile(Piece.OBSTACLE, TeamColor.NONE);
+        tiles[3][4] = new Tile(Piece.OBSTACLE, TeamColor.NONE);
+
         // in the second to last row, add all pawns black
         for (int i = 6; i < 7; i++) {
             for (int j = 0; j < 8; j++) {
