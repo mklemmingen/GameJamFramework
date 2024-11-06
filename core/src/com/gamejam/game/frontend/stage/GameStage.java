@@ -435,11 +435,11 @@ public class GameStage extends Stage{
 
         // add the horizontal decoration one tile below the board
         // width is 8tiles
-        decohorizontal.setSize(tileSize * 8,
-                tileSize*0.25f);
+        decohorizontal.setSize(tileSize * 8, tileSize*0.8f);
         decohorizontal.setPosition((float) Gdx.graphics.getWidth() / 2 - board.getWidth() / 2,
-                (float) Gdx.graphics.getHeight() / 2 - board.getHeight() / 2 - tileSize*0.5f);
+                (float) Gdx.graphics.getHeight() / 2 - board.getHeight() / 2 - tileSize);
         decohorizontal.setZIndex(0);
+        addActor(decohorizontal);
 
         // add a splatter decoration to the bottom of the board
         splatterBottom.setSize(tileSize * 8, tileSize*0.5f);
