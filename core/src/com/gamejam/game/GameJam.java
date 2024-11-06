@@ -85,7 +85,7 @@ public class GameJam extends ApplicationAdapter {
 
 	// BACKEND --------------- creating the Backend Manager class that implements the linking interface ----------------
 
-	private static final BackMan backend = new BackMan();
+	private static BackMan backend;
 
 	// -------------------------------------------- START OF METHODS ---------------------------------------------------
 
@@ -93,6 +93,9 @@ public class GameJam extends ApplicationAdapter {
 	public void create() {
 
 		Gdx.app.log("GameJam", "GameJam started, create called");
+
+		// create the backend manager
+		backend = new BackMan();
 
 		// creation of the batch for drawing the images -------------------------------------
 		batch = new SpriteBatch();
@@ -291,9 +294,11 @@ public class GameJam extends ApplicationAdapter {
 		* method for creating the stage for the main menu
 		 */
 
-		// start the song
-		background_music.setVolume(volume);
-		background_music.play();
+		// start the song, if not already playing
+		if(!(background_music.isPlaying())) {
+			background_music.setVolume(volume);
+			background_music.play();
+		}
 
 		switchToStage(new MenuStage());
 	}
@@ -506,9 +511,12 @@ public class GameJam extends ApplicationAdapter {
 		return currentStage;
 	}
 
+	// backend -----------------------------------------------------------------------------------------------------
+
 	public static BackMan getBackend() {
 		return backend;
 	}
+
 	public static int getNumberColumns() {
 		return numberColumns;
 	}

@@ -14,22 +14,41 @@ import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.scenes.scene2d.utils.DragListener;
 import com.badlogic.gdx.utils.Align;
+import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.gamejam.game.GameJam;
+import com.gamejam.game.backend.BackMan;
 import com.gamejam.game.link.*;
 
 import static com.gamejam.game.GameJam.*;
 
 public class GameStage extends Stage{
 
-    private Table rootBoard;
+    private BackMan backend;
 
-    private Table moveLogoTable;
+    private Table rootBoard; // rootTable for the gameBoard
+
+    private Image board; // the board image
+    private Image decovertical; // the vertical decoration
+    private Image decohorizontal; // the horizontal decoration
+    private Image splatterBottom;
+    private Image splatterTop;
+
+    // ----- Player Data -----------------------------------------------------------------------------------------------
+
+    // player 1 data
+    private Table player1stats;
+    private Image player1WHITElogo;
+    private Table lostpieces1WhiteVisual;
+    private Array<Piece> lostPieces1Data;
+
+    // player 2 data
+    private Table player2stats;
+    private Image player2BLACKlogo;
+    private Table lostpieces2BlackVisual;
+    private Array<Piece> lostPieces2Data;
 
     // ----- Asset Variables -------------------------------------------------------------------------------------------
-
-    private  Image whiteLogo;
-    private  Image blackLogo;
 
     private Texture impossibleMoveLogo;
     private  Texture empty;
@@ -62,7 +81,11 @@ public class GameStage extends Stage{
         Gdx.app.log("GameStage", "Creating GameStage");
 
         Gdx.app.log("Game", "Starting Game");
-        GameJam.getBackend().startGame();
+        backend = GameJam.getBackend();
+        backend.startGame();
+        if(backend.getBoard() == null){
+            Gdx.app.log("Game", "backend.getBoard() is null after startGame called");
+        }
         Gdx.app.log("Game", "Game Started");
 
         loadAllAssets();
@@ -72,7 +95,12 @@ public class GameStage extends Stage{
         this.addActor(rootBoard); // add rootTable to gameStage
         addActor(buttonsTable(getTileSize())); // add the buttonsTable to the gameStage
         GameJam.addSoundAndSettingButtons(this); // add the sound and setting buttons to the stage
-        addActor(moveLogoTable); // add the move logo table to the stage
+
+        // at the board image in the horizontal center
+        addBoardVisualisation();
+
+        // first call of updateVisualisePlayerData
+        updateVisualisePlayerData();
 
         updateGameStage(); // first update of the gameStage
     }
@@ -86,12 +114,15 @@ public class GameStage extends Stage{
 
         Gdx.app.log("GameStage", "Updating the GameStage");
 
-        updateMoveLogo();
-
         // ----- getting and setting all info from GameJam we need to create the current iteration of the board
 
-        Board gameBoard = getBackend().getBoard();
-        final Tile[][] gameBoardArray = gameBoard.getGameBoard();
+        final Tile[][] gameBoardArray = backend.getBoard().getGameBoard();
+
+        if(gameBoardArray == null){
+            Gdx.app.log("Game", "The Tile[][] inside Board is null");
+            Gdx.app.log("ERROR", "You cant see any pieces now!");
+            return;
+        }
 
         float tileSize = getTileSize();
 
@@ -118,6 +149,7 @@ public class GameStage extends Stage{
             for (int i = 0; i < numColumns; i++) {
 
                 // tileWidget is "the Piece" ----------------------------------------
+
                 final Stack tileWidget = new Stack();
                 Texture pieceText = getTextFromTile(gameBoardArray[i][j]);
                 Image solPiece = new Image(pieceText);
@@ -322,9 +354,11 @@ public class GameStage extends Stage{
         empty = new Texture("misc/Empty.png");
         obstacle = null; // TODO
 
-        whiteLogo = new Image(new Texture("misc/player1.png"));
-        blackLogo = new Image(new Texture("misc/player2.png"));
-
+        board = new Image(new Texture("board/board.png"));
+        decovertical = new Image(new Texture("board/12345678.png"));
+        decohorizontal = new Image(new Texture("board/HGFEDCBA.png"));
+        splatterBottom = new Image(new Texture("board/splatterBottom.png"));
+        splatterTop = new Image(new Texture("board/splatterTop.png"));
 
         Gdx.app.log("GameStage", "Loading Assets: Environment Textures loading finished"); // --------
         Gdx.app.log("GameStage", "Loading Assets: Piece Textures starting"); // ----------------------
@@ -383,37 +417,45 @@ public class GameStage extends Stage{
         return backTable;
     }
 
-    private void updateMoveLogo() {
-        /*
-         * method for updating the moveLogoStage with the correct logo
-         * if in game, add an actor depending on current GameState
-         */
-
-        Gdx.app.log("GameStage", "Updating the Move Logo");
-
-        // get currentGameState
-        GameState currentState = GameJam.getBackend().getGameState();
-
-        Table currentMover = new Table();
-
+    private void addBoardVisualisation() {
+        // add the board image center of the screen
         float tileSize = getTileSize();
+        board.setSize(tileSize * 8, tileSize * 8);
+        board.setPosition((float) Gdx.graphics.getWidth() / 2 - board.getWidth() / 2,
+                (float) Gdx.graphics.getHeight() / 2 - board.getHeight() / 2);
+        board.setZIndex(0);
+        addActor(board);
 
-        float width = tileSize * 3;
-        float height = tileSize * 2;
-        currentMover.setSize(width, height);
+        // add the vertical decoration one tile to the left of the board
+        decovertical.setSize(tileSize*0.25f, tileSize * 8);
+        decovertical.setPosition((float) Gdx.graphics.getWidth() / 2 - board.getWidth() / 2 - tileSize*0.5f,
+                (float) Gdx.graphics.getHeight() / 2 - board.getHeight() / 2);
+        decovertical.setZIndex(0);
+        addActor(decovertical);
 
-        // Position at upper left corner
-        float xPosition = tileSize / 3; // Left edge of the screen
-        float yPosition = Gdx.graphics.getHeight() - height;
-        // Subtract height of the mover, positioning it at the top
-        currentMover.setPosition(xPosition, yPosition);
+        // add the horizontal decoration one tile below the board
+        // width is 8tiles
+        decohorizontal.setSize(tileSize * 8,
+                tileSize*0.25f);
+        decohorizontal.setPosition((float) Gdx.graphics.getWidth() / 2 - board.getWidth() / 2,
+                (float) Gdx.graphics.getHeight() / 2 - board.getHeight() / 2 - tileSize*0.5f);
+        decohorizontal.setZIndex(0);
 
-        if (currentState == GameState.WHITE_TURN) {
-            currentMover.addActor(whiteLogo);
-        } else if (currentState == GameState.BLACK_TURN) {
-            currentMover.addActor(blackLogo);
-        }
+        // add a splatter decoration to the bottom of the board
+        splatterBottom.setSize(tileSize * 8, tileSize*0.5f);
+        splatterBottom.setPosition((float) Gdx.graphics.getWidth() / 2 - board.getWidth() / 2,
+                (float) Gdx.graphics.getHeight() / 2 - board.getHeight() / 2 - tileSize*0.5f);
+        splatterBottom.setZIndex(0);
+        addActor(splatterBottom);
 
-        moveLogoTable = currentMover;
+        // add a splatter decoration to the top of the board
+        splatterTop.setSize(tileSize * 8, tileSize*0.5f);
+        splatterTop.setPosition((float) Gdx.graphics.getWidth() / 2 - board.getWidth() / 2,
+                (float) Gdx.graphics.getHeight() / 2 + board.getHeight() / 2);
+        splatterTop.setZIndex(0);
+        addActor(splatterTop);
+    }
+
+    private void updateVisualisePlayerData() {
     }
 }
