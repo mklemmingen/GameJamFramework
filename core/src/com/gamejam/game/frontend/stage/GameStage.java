@@ -519,11 +519,9 @@ public class GameStage extends Stage{
         for (Piece piece : lostPieces1Data) {
             // get the texture of the piece
             TextureRegion pieceTexture = getTextFromTile(new Tile(piece, TeamColor.WHITE));
-            pieceTexture.setRegionHeight((int) tileSize);
-            pieceTexture.setRegionWidth((int) tileSize);
             // create an image with the texture
             Image pieceImage = new Image(pieceTexture);
-            pieceImage.setSize(tileSize/2, tileSize/2);
+            pieceImage.setSize(tileSize/8, tileSize/8);
             // add the image to the table
             player1stats.add(pieceImage);
 
@@ -543,11 +541,9 @@ public class GameStage extends Stage{
         for (Piece piece : lostPieces2Data) {
             // get the texture of the piece
             TextureRegion pieceTexture = getTextFromTile(new Tile(piece, TeamColor.BLACK));
-            pieceTexture.setRegionHeight((int) tileSize);
-            pieceTexture.setRegionWidth((int) tileSize);
             // create an image with the texture
             Image pieceImage = new Image(pieceTexture);
-            pieceImage.setSize(tileSize/2, tileSize/2);
+            pieceImage.setSize(tileSize/8, tileSize/8);
             // add the image to the table
             player2stats.add(pieceImage);
 
