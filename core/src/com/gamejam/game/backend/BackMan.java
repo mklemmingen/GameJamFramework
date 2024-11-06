@@ -31,13 +31,29 @@ public class BackMan implements FrontendZugriff {
 
         // create new board and set it up - EMPTY BOARD
         Tile[][] tiles = new Tile[8][8];
-        for (int i = 0; i < 8; i++){
+
+        // in the first row, add all pawns white
+        for (int i = 0; i < 1; i++){
+            for (int j = 0; j < 8; j++){
+                tiles[i][j] = new Tile(Piece.PAWN, TeamColor.WHITE);
+            }
+        }
+
+        // everything inbetween, make it a empty tile
+        for (int i = 1; i < 7; i++){
             for (int j = 0; j < 8; j++){
                 tiles[i][j] = new Tile();
             }
         }
 
-        gameBoard = new Board(tiles); // 
+        // in the last row, add al pawns black
+        for (int i = 7; i < 8; i++){
+            for (int j = 0; j < 8; j++){
+                tiles[i][j] = new Tile(Piece.PAWN, TeamColor.BLACK);
+            }
+        }
+
+        gameBoard = new Board(tiles);
     }
 
     /*

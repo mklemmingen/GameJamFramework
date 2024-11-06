@@ -40,6 +40,8 @@ public class MusicPlaylist {
             }
         });
         songs.add(new Song(songName, artistName, song));
+
+        Gdx.app.log("Playlist", "Song " + songName + " by " + artistName + " added to playlist");
     }
 
     public void play() {
@@ -83,6 +85,9 @@ public class MusicPlaylist {
                 // choose a random index from the notInList ArrayList
                 randomIndex = notInList.get(new Random().nextInt(notInList.size()));
             }
+
+            Gdx.app.log("Playlist", "Random index: " + randomIndex +
+                    " Current Song: " + getCurrentSong().getSongName());
         }
 
         hasStartedOnce = true;

@@ -15,6 +15,7 @@ public class Board {
          * Constructor for the Board object
          * Initializes the board with the starting positions of the pieces
          */
+        this.board = board;
     }
 
     public Tile[][] getGameBoard(){

@@ -30,10 +30,6 @@ public class Tile {
         /*
          * Getter method for the pieceType
          */
-        if(pieceType == null){
-            Gdx.app.log("BoardTile", "Piece type null has been returned");
-            return null;
-        }
         return pieceType;
     }
 
@@ -41,10 +37,6 @@ public class Tile {
         /*
          * Getter method for the teamColor
          */
-        if(teamColor == null){
-            Gdx.app.log("BoardTile", "Team color null has been returned");
-            return null;
-        }
         return teamColor;
     }
 }

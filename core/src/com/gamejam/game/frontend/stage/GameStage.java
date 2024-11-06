@@ -21,6 +21,7 @@ import com.gamejam.game.backend.BackMan;
 import com.gamejam.game.link.*;
 
 import static com.gamejam.game.GameJam.*;
+import static com.gamejam.game.link.Piece.PAWN;
 
 public class GameStage extends Stage{
 
@@ -90,7 +91,7 @@ public class GameStage extends Stage{
 
         Gdx.app.log("GameStage", "visually creating the board game with pieces");
         rootBoard = new Table(); // create rootTable
-        this.addActor(rootBoard); // add rootTable to gameStage
+        addActor(rootBoard); // add rootTable to gameStage
         addActor(buttonsTable(getTileSize())); // add the buttonsTable to the gameStage
         GameJam.addSoundAndSettingButtons(this); // add the sound and setting buttons to the stage
 
@@ -162,11 +163,6 @@ public class GameStage extends Stage{
 
         float tileSize = getTileSize();
 
-        // add the audio table to gameStage as Actor and position on the far right of the Screen
-        Stage gameStage = new Stage(new FitViewport(Gdx.graphics.getWidth(), Gdx.graphics.getHeight()));
-
-        GameJam.getBatch().begin();
-
         // ---------------------------------------------------------------------------------------------------
 
         Table root = new Table();
@@ -180,102 +176,113 @@ public class GameStage extends Stage{
         root.setPosition((float) Gdx.graphics.getWidth() / 2 - root.getWidth() / 2,
                 (float) Gdx.graphics.getHeight() / 2 - root.getHeight() / 2);
 
+        int numberOfPixelsOnBoard = 0;
+
         for (int j = 0; j < numRows; j++) {
             root.row();
             for (int i = 0; i < numColumns; i++) {
 
-                // tileWidget is "the Piece" ----------------------------------------
+                // tileWidget is "the Piece" or an empty tile -----------------------
 
                 final Stack tileWidget = new Stack();
-                Texture pieceText = getTextFromTile(gameBoardArray[i][j]);
-                Image solPiece = new Image(pieceText);
-                solPiece.setSize(tileSize, tileSize);
-                tileWidget.add(solPiece);
+                tileWidget.setSize(tileSize, tileSize);
 
+                Texture pieceTexture = getTextFromTile(gameBoardArray[i][j]);
+                Image pieceVis = new Image(pieceTexture);
+                pieceVis.setSize(tileSize, tileSize);
+                tileWidget.add(pieceVis);
+
+                // adding the number of pixels of the image to the counter to have a debug value
+                numberOfPixelsOnBoard += (int) (pieceVis.getImageHeight()*pieceVis.getImageWidth());
 
                 final int finalI = i;
                 final int finalJ = j;
-                tileWidget.addListener(new DragListener() {
-                    @Override
-                    public void dragStart(InputEvent event, float x, float y, int pointer) {
-                        // Code here will run when the player starts dragging the actor.
 
-                        Gdx.app.log("GameStage", "a drag has started");
+                // only add the listeners (to Drag and Drop) to tiles that aren't null in their piecetyp and color
+                if (!(gameBoardArray[i][j].getPieceType() == null)) {
+                    tileWidget.addListener(new DragListener() {
+                        @Override
+                        public void dragStart(InputEvent event, float x, float y, int pointer) {
+                            // Code here will run when the player starts dragging the actor.
 
-                        // if the current color is not the color of the player, we return and display a move not
-                        // allowed actor on screen for 2 seconds
+                            Gdx.app.log("GameStage", "a drag has started");
 
-                        GameState state = GameJam.getBackend().getGameState();
-                        if (state == GameState.WHITE_TURN &
-                                gameBoardArray[finalI][finalJ].getTeamColor() == TeamColor.BLACK) {
-                            // we return and display a move not allowed actor on screen for 2 seconds
-                            moveNotAllowed();
-                            event.cancel();
-                        } else if (state == GameState.BLACK_TURN &
-                                gameBoardArray[finalI][finalJ].getTeamColor() == TeamColor.WHITE) {
-                            // we return and display a move not allowed actor on screen for 2 seconds
-                            moveNotAllowed();
-                            event.cancel();
-                        }
-                    }
+                            // if the current color is not the color of the player, we return and display a move not
+                            // allowed actor on screen for 2 seconds
 
-                    @Override
-                    public void drag(InputEvent event, final float x, final float y, int pointer) {
-                        // move the tileWidget with the mouse
-                        tileWidget.moveBy(x - tileWidget.getWidth() / 2, y - tileWidget.getHeight() / 2);
-                    }
-
-
-                    @Override
-                    public void dragStop(InputEvent event, float x, float y, int pointer) {
-
-                        // Code here will run when the player lets go of the actor
-
-                        // Get the position of the tileWidget relative to the parent actor (the gameBoard)
-                        Vector2 localCoords = new Vector2(x, y);
-                        // Convert the position to stage (screen) coordinates
-                        Vector2 screenCoords = tileWidget.localToStageCoordinates(localCoords);
-
-                        Coordinate currentCoord = calculateTileByPX((int) screenCoords.x, (int) screenCoords.y);
-
-                        // Coordinate
-                        Coordinate startingCoord = new Coordinate(finalI, finalJ);
-                        Coordinate targetCoord = new Coordinate(currentCoord.getX(), currentCoord.getY());
-
-                        // ask via Interface link if the moves is Valid
-                        boolean moveLegit = getBackend().isValidMove(startingCoord, targetCoord);
-
-                        if (moveLegit) {
-                            // temp save piecetype of targetCoord
-                            Tile tempTile = gameBoardArray[currentCoord.getX()][currentCoord.getY()];
-                            // temp piecetype
-                            Piece tempPiece = tempTile.getPieceType();
-                            // temp save of color of tempTile
-                            TeamColor tempColor = tempTile.getTeamColor();
-
-                            // Board.update with oldX, oldY, newX, newY
-                            boolean hitTarget = getBackend().movePiece(startingCoord, targetCoord);
-                            if(hitTarget){
-                                playHitSound();
-                                addPieceTypetoPlayerData(tempPiece, tempColor);
+                            GameState state = GameJam.getBackend().getGameState();
+                            if (state == GameState.WHITE_TURN &
+                                    gameBoardArray[finalI][finalJ].getTeamColor() == TeamColor.BLACK) {
+                                // we return and display a move not allowed actor on screen for 2 seconds
+                                moveNotAllowed();
+                                event.cancel();
+                            } else if (state == GameState.BLACK_TURN &
+                                    gameBoardArray[finalI][finalJ].getTeamColor() == TeamColor.WHITE) {
+                                // we return and display a move not allowed actor on screen for 2 seconds
+                                moveNotAllowed();
+                                event.cancel();
                             }
-                            Gdx.app.log("GameStage", "a drag has stopped, a move WAS made");
-                            updateGameStage();
-                            updateVisualisePlayerData();
-                        } else {
-                            Gdx.app.log("GameStage", "a drag has stopped, a move WAS NOT made");
-                            // we return and display a move not allowed actor on screen for 2 seconds
-                            moveNotAllowed();
-                            // resets gameBoard, since move wasn't allowed, and we have to set the drag back to start
-                            updateGameStage();
                         }
-                    }
-                });
+
+                        @Override
+                        public void drag(InputEvent event, final float x, final float y, int pointer) {
+                            // move the tileWidget with the mouse
+                            tileWidget.moveBy(x - tileWidget.getWidth() / 2, y - tileWidget.getHeight() / 2);
+                        }
+
+
+                        @Override
+                        public void dragStop(InputEvent event, float x, float y, int pointer) {
+
+                            // Code here will run when the player lets go of the actor
+
+                            // Get the position of the tileWidget relative to the parent actor (the gameBoard)
+                            Vector2 localCoords = new Vector2(x, y);
+                            // Convert the position to stage (screen) coordinates
+                            Vector2 screenCoords = tileWidget.localToStageCoordinates(localCoords);
+
+                            Coordinate currentCoord = calculateTileByPX((int) screenCoords.x, (int) screenCoords.y);
+
+                            // Coordinate
+                            Coordinate startingCoord = new Coordinate(finalI, finalJ);
+                            Coordinate targetCoord = new Coordinate(currentCoord.getX(), currentCoord.getY());
+
+                            // ask via Interface link if the moves is Valid
+                            boolean moveLegit = backend.isValidMove(startingCoord, targetCoord);
+
+                            if (moveLegit) {
+                                // temp save piecetype of targetCoord
+                                Tile tempTile = gameBoardArray[currentCoord.getX()][currentCoord.getY()];
+                                // temp piecetype
+                                Piece tempPiece = tempTile.getPieceType();
+                                // temp save of color of tempTile
+                                TeamColor tempColor = tempTile.getTeamColor();
+
+                                // Board.update with oldX, oldY, newX, newY
+                                boolean hitTarget = getBackend().movePiece(startingCoord, targetCoord);
+                                if (hitTarget) {
+                                    playHitSound();
+                                    addPieceTypetoPlayerData(tempPiece, tempColor);
+                                }
+                                Gdx.app.log("GameStage", "a drag has stopped, a move WAS made");
+                                updateGameStage();
+                                updateVisualisePlayerData();
+                            } else {
+                                Gdx.app.log("GameStage", "a drag has stopped, a move WAS NOT made");
+                                // we return and display a move not allowed actor on screen for 2 seconds
+                                moveNotAllowed();
+                                // resets gameBoard, since move wasn't allowed, and we have to set the drag back to start
+                                updateGameStage();
+                            }
+                        }
+                    });
+                }
                 root.add(tileWidget).size(tileSize);
             }
         }
-        GameJam.getBatch().end();
         setRootTable(root);
+
+        Gdx.app.log("GameStage", "The number of pixels on the board is: " + numberOfPixelsOnBoard);
     }
 
     private void addPieceTypetoPlayerData(Piece piecetype, TeamColor teamColor) {
@@ -319,6 +326,10 @@ public class GameStage extends Stage{
     * Method to take a piece and return the class attribute loaded Texture of that piece
      */
     private Texture getTextFromTile(Tile tile) {
+        // if tile has null attributes, it means it is empty
+        if (tile.getPieceType() == null) {
+            return empty;
+        }
         TeamColor teamColor = tile.getTeamColor();
         Piece pieceType = tile.getPieceType();
 
@@ -327,10 +338,10 @@ public class GameStage extends Stage{
             return obstacle;
         }
 
-        switch (teamColor.name()) {
-            case "WHITE":
+        switch (teamColor) {
+            case WHITE:
                 return getWhitePieceTexture(pieceType);
-            case "BLACK":
+            case BLACK:
                 return getBlackPieceTexture(pieceType);
             default:
                 Gdx.app.log("GameStage", "NO valid team color -> Empty");
@@ -338,23 +349,23 @@ public class GameStage extends Stage{
         }
     }
 
-    private Texture getBlackPieceTexture(Piece pieceType) {
-        switch (pieceType.name()) {
-            case "PAWN":
+    private Texture getWhitePieceTexture(Piece pieceType) {
+        switch (pieceType) {
+            case PAWN:
                 return whitePawn;
-            case "ROOK":
+            case ROOK:
                 return whiteRook;
-            case "KNIGHT":
+            case KNIGHT:
                 return whiteKnight;
-            case "BISHOP":
+            case BISHOP:
                 return whiteBishop;
-            case "QUEEN":
+            case QUEEN:
                 return whiteQueen;
-            case "KING":
+            case KING:
                 return whiteKing;
-            case "PROGRAMMER":
+            case PROGRAMMER:
                 return whiteProgrammer;
-            case "CHANCELLOR":
+            case CHANCELLOR:
                 return whiteChancellor;
             default:
                 Gdx.app.log("GameStage", "NO valid piece type -> Empty");
@@ -362,23 +373,23 @@ public class GameStage extends Stage{
         }
     }
 
-    private Texture getWhitePieceTexture(Piece pieceType) {
-        switch (pieceType.name()) {
-            case "PAWN":
+    private Texture getBlackPieceTexture(Piece pieceType) {
+        switch (pieceType) {
+            case PAWN:
                 return blackPawn;
-            case "ROOK":
+            case ROOK:
                 return blackRook;
-            case "KNIGHT":
+            case KNIGHT:
                 return blackKnight;
-            case "BISHOP":
+            case BISHOP:
                 return blackBishop;
-            case "QUEEN":
+            case QUEEN:
                 return blackQueen;
-            case "KING":
+            case KING:
                 return blackKing;
-            case "PROGRAMMER":
+            case PROGRAMMER:
                 return blackProgrammer;
-            case "CHANCELLOR":
+            case CHANCELLOR:
                 return blackChancellor;
             default:
                 Gdx.app.log("GameStage", "NO valid piece type -> Empty");
@@ -392,6 +403,9 @@ public class GameStage extends Stage{
 
     private void setRootTable(Table root) {
         this.rootBoard = root;
+        rootBoard.center();
+        rootBoard.pack();
+        rootBoard.setZIndex(1);
     }
 
     private void loadAllAssets() {

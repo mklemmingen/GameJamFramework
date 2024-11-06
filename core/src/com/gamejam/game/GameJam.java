@@ -80,6 +80,7 @@ public class GameJam extends ApplicationAdapter {
 
 	// -------------------------------------------- Number of Columns and Rows -----------------------------------------
 
+	//
 	private static final int numberColumns = 8;
 	private static final int numberRows = 8;
 

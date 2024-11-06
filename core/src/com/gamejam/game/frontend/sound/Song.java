@@ -27,7 +27,6 @@ public class Song {
         /*
         getSong returns the Music object of the Song.
          */
-        Gdx.app.log("Song", "Song with Name" + songName + " and Artist " + artistName + " returned");
         return song;
     }
 

@@ -31,9 +31,8 @@ public class MenuStage extends Stage{
         play2Button.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
-                GameJam.setInGame(true);
                 GameStage gameStage = new GameStage();
-                switchToStage(gameStage.getStage());
+                switchToStage(gameStage);
             }
         });
         root.row();
