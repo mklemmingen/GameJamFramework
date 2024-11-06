@@ -39,13 +39,11 @@ public class GameStage extends Stage{
     // player 1 data
     private Table player1stats;
     private Image player1WHITElogo;
-    private Table lostpieces1WhiteVisual;
     private Array<Piece> lostPieces1Data;
 
     // player 2 data
     private Table player2stats;
     private Image player2BLACKlogo;
-    private Table lostpieces2BlackVisual;
     private Array<Piece> lostPieces2Data;
 
     // ----- Asset Variables -------------------------------------------------------------------------------------------
@@ -100,9 +98,47 @@ public class GameStage extends Stage{
         addBoardVisualisation();
 
         // first call of updateVisualisePlayerData
+        intialisePlayerData();
         updateVisualisePlayerData();
 
         updateGameStage(); // first update of the gameStage
+    }
+
+    private void intialisePlayerData() {
+
+        lostPieces1Data = new Array<>();
+        lostPieces2Data = new Array<>();
+
+        float tileSize = getTileSize();
+
+        float statAndLogoWidth = tileSize*4;
+
+        // player 1 data is on the left side of the screen
+        player1WHITElogo = new Image(new Texture("misc/player1.png"));
+        player1WHITElogo.setSize(statAndLogoWidth, tileSize*1.5f);
+        // x position of player1
+        float xpospl1 = (float) Gdx.graphics.getWidth()/4-statAndLogoWidth;
+        // centralise at the first fourth of the screen width
+        player1WHITElogo.setPosition(xpospl1, tileSize*8);
+        addActor(player1WHITElogo);
+        // player 1 data visualisation of the pieces it has lost is underneath it in a 2 wide table
+        player1stats = new Table();
+        player1stats.setSize(statAndLogoWidth, tileSize*2);
+        player1stats.setPosition(xpospl1, tileSize*8-player1stats.getHeight()-player1WHITElogo.getHeight());
+        addActor(player1stats);
+
+        // player 2 data is on the right side of the screen
+        player2BLACKlogo = new Image(new Texture("misc/player2.png"));
+        player2BLACKlogo.setSize(statAndLogoWidth, tileSize*1.5f);
+        //-tilesize/2 to accomodate for the width of the 1234 deco
+        float xpospl2 = (float) Gdx.graphics.getWidth()- (float) Gdx.graphics.getWidth()/4-(tileSize/2);
+        player2BLACKlogo.setPosition(xpospl2, tileSize*8);
+        addActor(player2BLACKlogo);
+        // player 2 data visualisation of the pieces it has lost is underneath it in a 2 wide table
+        player2stats = new Table();
+        player2stats.setSize(statAndLogoWidth, tileSize*2);
+        player2stats.setPosition(xpospl2, tileSize*6.5f);
+        addActor(player2stats);
     }
 
     // ----- Game Methods ----------------------------------------------------------------------------------------------
@@ -202,28 +238,30 @@ public class GameStage extends Stage{
 
                         Coordinate currentCoord = calculateTileByPX((int) screenCoords.x, (int) screenCoords.y);
 
-                        // for loop through validMoveTiles, at each tile we check for equality of currentCoord
-                        // with the Coordinate
-                        // in the ArrayList by using currentCoord.checkEqual(validMoveTiles[i]) and if true,
-                        // we set the
-                        // validMove Variable to true, call on the update method of the Board class and break
-                        // the for loop
-                        // then clear the Board.
-
                         // Coordinate
                         Coordinate startingCoord = new Coordinate(finalI, finalJ);
                         Coordinate targetCoord = new Coordinate(currentCoord.getX(), currentCoord.getY());
 
                         // ask via Interface link if the moves is Valid
-                        boolean moveLegit = getBackend().isValidMove(startingCoord, targetCoord
-                        );
+                        boolean moveLegit = getBackend().isValidMove(startingCoord, targetCoord);
 
                         if (moveLegit) {
+                            // temp save piecetype of targetCoord
+                            Tile tempTile = gameBoardArray[currentCoord.getX()][currentCoord.getY()];
+                            // temp piecetype
+                            Piece tempPiece = tempTile.getPieceType();
+                            // temp save of color of tempTile
+                            TeamColor tempColor = tempTile.getTeamColor();
+
                             // Board.update with oldX, oldY, newX, newY
                             boolean hitTarget = getBackend().movePiece(startingCoord, targetCoord);
-                            if(hitTarget){ playHitSound(); }
-                            GameJam.setLegitTurn(true);
+                            if(hitTarget){
+                                playHitSound();
+                                addPieceTypetoPlayerData(tempPiece, tempColor);
+                            }
                             Gdx.app.log("GameStage", "a drag has stopped, a move WAS made");
+                            updateGameStage();
+                            updateVisualisePlayerData();
                         } else {
                             Gdx.app.log("GameStage", "a drag has stopped, a move WAS NOT made");
                             // we return and display a move not allowed actor on screen for 2 seconds
@@ -238,6 +276,15 @@ public class GameStage extends Stage{
         }
         GameJam.getBatch().end();
         setRootTable(root);
+    }
+
+    private void addPieceTypetoPlayerData(Piece piecetype, TeamColor teamColor) {
+        // add the piece to the player data
+        if (teamColor == TeamColor.WHITE) {
+            lostPieces1Data.add(piecetype);
+        } else {
+            lostPieces2Data.add(piecetype);
+        }
     }
 
     private void playHitSound() {
@@ -457,5 +504,48 @@ public class GameStage extends Stage{
     }
 
     private void updateVisualisePlayerData() {
+        // instead of using it as a class variable that is received at construct,
+        // we get it from the GameJam class to allow for dynamic resolution changes
+        float tileSize = getTileSize();
+
+        // iterate through player1array of lost pieces, get each pieces texture and add it to the table
+        // the table is 2 tiles wide, so we make each piece have a size of half a tilesize and fit 4 in a row
+
+        int counter = 0;
+        for (Piece piece : lostPieces1Data) {
+            // get the texture of the piece
+            Texture pieceTexture = getTextFromTile(new Tile(piece, TeamColor.WHITE));
+            // create an image with the texture
+            Image pieceImage = new Image(pieceTexture);
+            pieceImage.setSize(tileSize/2, tileSize/2);
+            // add the image to the table
+            player1stats.add(pieceImage);
+
+            if (counter == 4){
+                player1stats.row();
+                counter = 0;
+            }
+            counter += 1;
+        }
+
+        // iterate through player2array of lost pieces, get each pieces texture and add it to the table
+        // the table is also 2 tiles wide, so we make each piece have a size of half a tilesize and fit 4 in a row
+
+        counter = 0;
+        for (Piece piece : lostPieces2Data) {
+            // get the texture of the piece
+            Texture pieceTexture = getTextFromTile(new Tile(piece, TeamColor.BLACK));
+            // create an image with the texture
+            Image pieceImage = new Image(pieceTexture);
+            pieceImage.setSize(tileSize/2, tileSize/2);
+            // add the image to the table
+            player2stats.add(pieceImage);
+
+            if (counter == 4){
+                player2stats.row();
+                counter = 0;
+            }
+            counter += 1;
+        }
     }
 }
