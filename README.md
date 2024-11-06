@@ -38,7 +38,7 @@ Make sure you follow the guidelines these guidelines to the rules of your game! 
 Tip: Discuss and Plan within your team, then select groups with a task, work on the task, meet up, merge, test, and repeat. 
 If you do not plan and share responsibilities, you will not be finished in time.
 
-### Chess ---------------------------------------------------------------------------------------------------------------------------
+### Chess ---------------------------------------------------
 
 #### Pieces, Move- and Hit-Logic
 - A Rook -> moves: Horizontally or vertically any number of squares. -> hits: Same as moves.
@@ -65,7 +65,7 @@ Chancellor: Place one chancellor somewhere inside the line of pawns.
 
 a game ends, if a players king has been removed, if a player cannot move any pieces (deadlock) or if the last three moves of a player were the same. 
 
-### Checkers -------------------------------------------------------------------------------------------------------------------------
+### Checkers ---------------------------------------------------
 
 #### Pieces
 
