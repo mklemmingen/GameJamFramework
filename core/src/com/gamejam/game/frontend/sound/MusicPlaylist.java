@@ -139,6 +139,13 @@ public class MusicPlaylist {
         if (!songs.isEmpty()) {
             songs.get(currentIndex).getSong().setVolume(volume);
         }
+        if(volume==0){
+            // hide the musiclabel by making it invisible
+            GameJam.getMusicLabel().setVisible(false);
+        } else {
+            // show the musiclabel by making it visible
+            GameJam.getMusicLabel().setVisible(true);
+        }
     }
 
     public void setLooping(boolean isLooping){
@@ -162,5 +169,9 @@ public class MusicPlaylist {
         for (Song song : songs) {
             song.dispose();
         }
+    }
+
+    public Song getCurrentSong(){
+        return songs.get(currentIndex);
     }
 }

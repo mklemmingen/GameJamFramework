@@ -153,20 +153,22 @@ public class GameJam extends ApplicationAdapter {
 
 		Gdx.app.log("GameJam", "Loading Assets: Music Loading starting"); // ------------------------
 
-		// music label
-		// load empty musicLabel and put its position to the lower left of the screen
-		musicLabel = new Label("", skin);
-		musicLabel.setPosition(tileSize, tileSize*1.25f);
-		musicLabel.setColor(Color.BLUE);
-		// scale down by 0.75 to 0.25 of current size
-		musicLabel.setFontScale(musicLabelScale);
-
-		// TODO add the musicLabel to the informationstage
-
 		// load the background music into MusicPlaylist object
 		background_music = new MusicPlaylist();
 		background_music.addSong("music/8BitCorpoLofi.mp3",
 				"Lofi 8 Bit Mixtape", "miguelangell960");
+
+		// music label
+		// load empty musicLabel and put its position to the lower left of the screen
+		musicLabel = new Label(" ", skin);
+		musicLabel.setPosition(tileSize, tileSize*1.25f);
+		musicLabel.setColor(Color.WHITE);
+		if(musicLabelScale == 0) {
+			musicLabelScale = 0.75f;
+		}
+		musicLabel.setFontScale(musicLabelScale);
+
+		informationStage.addActor(musicLabel);
 
 		// load the audio buttons and images
 		// sound at top right -----------------------------------------------------------------------------------------
