@@ -224,7 +224,7 @@ public class GameJam extends ApplicationAdapter {
 				// for now, just display a texture for 3 seconds that says "Settings not implemented"
 				// if you would like settings, here is the place you should add a method to display it
 				OneSecondsSelfDestruct settingsNotImpl = new OneSecondsSelfDestruct(
-						new Image(new Texture("misc/settingsNotImplemented.png")),
+						new Image(new Texture("misc/settingsNotimplemented.png")),
 						(float) Gdx.graphics.getWidth() / 2, (float) Gdx.graphics.getHeight() - tileSize*2);
 				informationStage.addActor(settingsNotImpl);
 			}
