@@ -37,6 +37,11 @@ public class GameStage extends Stage{
     private Image splatterBottom;
     private Image splatterTop;
 
+    // ----- DataFIllUpHitPieces ---------------------------------------------------------------------------------------
+
+    private int pieceCounter;
+    private int counter;
+
     // ----- Player Data -----------------------------------------------------------------------------------------------
 
     // player 1 data
@@ -189,7 +194,9 @@ public class GameStage extends Stage{
                             // allowed actor on screen for 2 seconds
 
                             GameState state = GameJam.getBackend().getGameState();
-                            if (state == GameState.WHITE_TURN &
+                            if(gameBoardArray[finalI][finalJ].getPieceType() == Piece.OBSTACLE){
+                                event.cancel();
+                            } else if (state == GameState.WHITE_TURN &
                                     gameBoardArray[finalI][finalJ].getTeamColor() == TeamColor.BLACK) {
                                 // we return and display a move not allowed actor on screen for 2 seconds
                                 moveNotAllowed();
@@ -507,50 +514,71 @@ public class GameStage extends Stage{
     private void updateVisualisePlayerData() {
         // instead of using it as a class variable that is received at construct,
         // we get it from the GameJam class to allow for dynamic resolution changes
-        float tileSize = getTileSize();
 
         // player 1 -----------------------------------------------------------------
         // clear the table
         player1stats.clear();
         // iterate through player1array of lost pieces, get each pieces texture and add it to the table
-        // the table is 2 tiles wide, so we make each piece have a size of half a tilesize and fit 4 in a row
+        // the table is 4 tiles wide, 4 tiles high
+        // it always has 16 tiles in it
 
-        int counter = 0;
+        pieceCounter = 0;
+        counter = 0;
         for (Piece piece : lostPieces1Data) {
             // get the texture of the piece
             TextureRegion pieceTexture = getTextFromTile(new Tile(piece, TeamColor.WHITE));
             // create an image with the texture
-            Image pieceImage = new Image(pieceTexture);
-            pieceImage.setSize(tileSize/8, tileSize/8);
-            // add the image to the table
-            player1stats.add(pieceImage);
-
-            if (counter == 4){
-                player1stats.row();
-                counter = 0;
-            }
-            counter += 1;
+            fillUpLostPieces(player1stats, pieceTexture);
         }
+
+        fillUpDataVis(player1stats);
+
         // ----------- player 2 ----------------------------------------------------
         // clear the table
         player2stats.clear();
         // iterate through player2array of lost pieces, get each pieces texture and add it to the table
-        // the table is also 2 tiles wide, so we make each piece have a size of half a tilesize and fit 4 in a row
+        // the table is 4 tiles wide, 4 tiles high
 
+        pieceCounter = 0;
         counter = 0;
         for (Piece piece : lostPieces2Data) {
             // get the texture of the piece
             TextureRegion pieceTexture = getTextFromTile(new Tile(piece, TeamColor.BLACK));
             // create an image with the texture
-            Image pieceImage = new Image(pieceTexture);
-            pieceImage.setSize(tileSize/8, tileSize/8);
-            // add the image to the table
-            player2stats.add(pieceImage);
+            fillUpLostPieces(player2stats, pieceTexture);
+        }
 
+        fillUpDataVis(player2stats);
+    }
+
+    private void fillUpLostPieces(Table playerStats, TextureRegion pieceTexture){
+        float tileSize = getTileSize();
+        // create an image with the texture
+        Image pieceImage = new Image(pieceTexture);
+        pieceImage.setSize(tileSize/2, tileSize/2);
+        // add the image to the table and add a row before if the counter is 4+
+        if (counter == 4){
+            playerStats.row();
+            counter = 0;
+        }
+        playerStats.add(pieceImage);
+        pieceCounter += 1;
+        counter += 1;
+    }
+
+    private void fillUpDataVis(Table playerStats){
+        float tileSize = getTileSize();
+        // add the rest of the tiles to the table (rest = 16-pieceCounter)
+        for (int i = 0; i < 16-pieceCounter; i++) {
+            // create an image with the texture
+            Image pieceImage = new Image(empty);
+            pieceImage.setSize(tileSize/8, tileSize/8);
             if (counter == 4){
-                player2stats.row();
+                playerStats.row();
                 counter = 0;
             }
+            // add the image to the table
+            playerStats.add(pieceImage);
             counter += 1;
         }
     }
@@ -560,35 +588,41 @@ public class GameStage extends Stage{
         lostPieces1Data = new Array<>();
         lostPieces2Data = new Array<>();
 
+        player1stats = new Table();
+        player2stats = new Table();
+
         float tileSize = getTileSize();
 
         float statAndLogoWidth = tileSize*4;
 
-        // player 1 data is on the left side of the screen
+        // player 1 data is on the left side of the screen ----------------------------------------------
         player1WHITElogo = new Image(new Texture("misc/player1chess.png"));
-        player1WHITElogo.setSize(statAndLogoWidth, tileSize*1.5f);
         // x position of player1
         float xpospl1 = (float) Gdx.graphics.getWidth()/4-statAndLogoWidth;
         // centralise at the first fourth of the screen width
-        player1WHITElogo.setPosition(xpospl1, tileSize*8);
+        setPosPlDat(player1stats, player1WHITElogo, xpospl1);
+        setSizesPlDat(player1WHITElogo, player1stats, tileSize);
         addActor(player1WHITElogo);
-        // player 1 data visualisation of the pieces it has lost is underneath it in a 2 wide table
-        player1stats = new Table();
-        player1stats.setSize(statAndLogoWidth, tileSize*2);
-        player1stats.setPosition(xpospl1, tileSize*8-player1stats.getHeight()-player1WHITElogo.getHeight());
         addActor(player1stats);
 
-        // player 2 data is on the right side of the screen
+        // player 2 data is on the right side of the screen ---------------------------------------------
         player2BLACKlogo = new Image(new Texture("misc/player2chess.png"));
-        player2BLACKlogo.setSize(statAndLogoWidth, tileSize*1.5f);
         //-tilesize/2 to accomodate for the width of the 1234 deco
         float xpospl2 = (float) Gdx.graphics.getWidth()- (float) Gdx.graphics.getWidth()/4-(tileSize/2);
-        player2BLACKlogo.setPosition(xpospl2, tileSize*8);
+        // centralise at the last fourth of the screen width
+        setPosPlDat(player2stats, player2BLACKlogo, xpospl2);
+        setSizesPlDat(player2BLACKlogo, player2stats, tileSize);
         addActor(player2BLACKlogo);
-        // player 2 data visualisation of the pieces it has lost is underneath it in a 2 wide table
-        player2stats = new Table();
-        player2stats.setSize(statAndLogoWidth, tileSize*2);
-        player2stats.setPosition(xpospl2, tileSize*8-player2stats.getHeight()-player2BLACKlogo.getHeight());
         addActor(player2stats);
     }
+
+    private void setPosPlDat(Table playerStats, Image playerLogo, float xpos){
+        playerLogo.setPosition(xpos, getTileSize()*8);
+        playerStats.setPosition(xpos, getTileSize()*8-playerStats.getHeight()-playerLogo.getHeight());
+    }
+    private void setSizesPlDat(Image playerLogo, Table playerStats, float tileSize){
+        playerLogo.setSize(tileSize*4, tileSize*1.5f);
+        playerStats.setSize(tileSize*2, tileSize*2);
+    }
+
 }
