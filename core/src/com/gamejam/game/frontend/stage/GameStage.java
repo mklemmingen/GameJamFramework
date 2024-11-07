@@ -406,7 +406,7 @@ public class GameStage extends Stage{
         Gdx.app.log("GameStage", "Loading Assets: Environment Textures starting"); // ----------------
 
         impossibleMoveLogo = new Texture("misc/impossibleMove.png");
-        empty = new Texture("misc/Empty.png");
+        empty = new Texture("misc/empty.png");
         obstacle = new Texture("misc/obstacle.png");
 
         board = new Image(new Texture("board/board.png"));

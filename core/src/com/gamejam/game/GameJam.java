@@ -43,9 +43,9 @@ public class GameJam extends ApplicationAdapter {
 
 	// volume of Sounds
 
-	private static float volume = 0.5f;  // variable to store the current MUSIC volume level
+	private static float volume = 0.1f;  // variable to store the current MUSIC volume level
 
-	private static float soundVolume = 0.20f;  // variable to store the current SOUND volume level
+	private static float soundVolume = 0.1f;  // variable to store the current SOUND volume level
 
 	// for the return to menu button, we have to have a boolean keeping processTurn from running if not true -----------
 	private static boolean inGame = false;
@@ -206,8 +206,8 @@ public class GameJam extends ApplicationAdapter {
 				soundButton.clearChildren();
 				if (volume == 0) {
 					soundButton.add(soundOnImage);
-					volume = 0.5f;
-					soundVolume = 0.20f;
+					volume = 0.1f;
+					soundVolume = 0.1f;
 					background_music.setVolume(volume);
 				} else {
 					soundButton.add(soundOffImage);
