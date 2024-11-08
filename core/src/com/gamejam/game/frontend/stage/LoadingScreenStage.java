@@ -72,7 +72,7 @@ public class LoadingScreenStage extends Stage {
 
         loadingSound = Gdx.audio.newSound(Gdx.files.internal("sounds/gamejamjingle.mp3"));
         Gdx.app.log("GameJam", "Loading Screen Jingle played");
-        loadingSound.play(GameJam.getSoundVolume());
+        loadingSound.play(GameJam.getVolume());
     }
 }
 

@@ -245,7 +245,7 @@ public class GameStage extends Stage{
                                 TeamColor tempColor = tempTile.getTeamColor();
 
                                 // Board.update with oldX, oldY, newX, newY
-                                boolean hitTarget = getBackend().movePiece(startingCoord, targetCoord);
+                                boolean hitTarget = backend.movePiece(startingCoord, targetCoord);
                                 if (hitTarget) {
                                     playHitSound();
                                     addPieceTypetoPlayerData(tempPiece, tempColor);
